@@ -1,4 +1,3 @@
-#+title: Macros
 #+TITLE: Advanced Rust - Lab 3: Rust Macros
 #+AUTHOR: Lukáš Hozda
 #+DATE: 2025
