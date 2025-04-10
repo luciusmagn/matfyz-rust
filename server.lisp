@@ -62,7 +62,7 @@
 ;; page template
 (defmacro with-page ((&key title) &body body)
   `(with-html-string
-     (:doctype)
+       (:doctype)
      (:html
       (:head
        (:meta :charset "UTF-8")
@@ -179,7 +179,7 @@
     (generate-course course-name)))
 
 (defun lab-paths (req)
-  (scan "^/(advanced|intro)-rust/lab-[0-9]+/?$" (script-name* req)))
+  (scan "^/(advanced|intro)-rust/.+/?$" (script-name* req)))
 (define-easy-handler (lab :uri #'lab-paths)
     ()
   (setf (content-type*) "text/html")
