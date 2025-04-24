@@ -2,10 +2,6 @@
 #+AUTHOR: Lukáš Hozda
 #+DATE: 2025
 
-* Introduction
-
-This lab explores Rust's unsafe features. While Rust's safety guarantees are a core strength of the language, sometimes we need to go beyond what the type system can verify. Unsafe code allows direct manipulation of memory, calling unsafe functions, and implementing abstractions that the compiler cannot verify but that you, as the programmer, guarantee are sound.
-
 * Setup
 
 1. Create a new project: ~cargo new unsafe_lab~
