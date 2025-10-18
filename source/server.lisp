@@ -29,7 +29,7 @@
 
 (defun handler--file-paths (request)
   "Check if request matches file paths."
-  (scan "\\.(pdf|org)$" (script-name* request)))
+  (scan "\\.(pdf|org|typ)$" (script-name* request)))
 
 (define-easy-handler (file :uri #'handler--file-paths) ()
   (let* ((uri       (script-name*))
