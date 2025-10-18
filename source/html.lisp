@@ -21,9 +21,9 @@
     "Render the page footer."
     `(:div :class "footer"
            (:p "Maintained by " (:strong *author*))
-           (:p "Contacts: "
-               (dolist (contact *contacts*)
-                 (:span (:strong (car contact)) ": " (cadr contact) " ")))
+           (:h3 "Contacts")
+           (dolist (contact *contacts*)
+             (:p (:strong (car contact)) ": " (cadr contact) " "))
            (:p (:a :href *department-url* 
                    "Department of Distributed and Dependable Systems"))))
 
