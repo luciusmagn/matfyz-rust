@@ -15,36 +15,38 @@
              ,@body
              ,(page--render-footer))))))
 
-(-> page--get-css () string)
-(defun page--get-css ()
-  "Return the CSS styles for the page."
-  "@font-face {
-     font-family: \"TT Livret\";
-     src: url(\"/static/TTLivretTextRegular.woff2\") format(\"woff2\");
-     font-weight: normal;
-     font-style: normal;
-   }
-   * { font-family: \"TT Livret\"; }
-   body {
-     font-family: serif;
-     margin: 0;
-     padding: 20px;
-     background: black;
-     color: white;
-   }
-   a { color: #DDD; }
-   .container { max-width: 800px; margin: 0 auto; }
-   .footer { margin-top: 40px; }")
 
-(defun page--render-footer ()
-  "Render the page footer."
-  `(:div :class "footer"
-         (:p "Maintained by " (:strong *author*))
-         (:p "Contacts: "
-             (dolist (contact *contacts*)
-               (:span (:strong (car contact)) ": " (cadr contact) " ")))
-         (:p (:a :href *department-url* 
-                 "Department of Distributed and Dependable Systems"))))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun page--render-footer ()
+    "Render the page footer."
+    `(:div :class "footer"
+           (:p "Maintained by " (:strong *author*))
+           (:p "Contacts: "
+               (dolist (contact *contacts*)
+                 (:span (:strong (car contact)) ": " (cadr contact) " ")))
+           (:p (:a :href *department-url* 
+                   "Department of Distributed and Dependable Systems"))))
+
+  (-> page--get-css () string)
+  (defun page--get-css ()
+    "Return the CSS styles for the page."
+    "@font-face {
+       font-family: \"TT Livret\";
+       src: url(\"/static/TTLivretTextRegular.woff2\") format(\"woff2\");
+       font-weight: normal;
+       font-style: normal;
+     }
+     * { font-family: \"TT Livret\"; }
+     body {
+       font-family: serif;
+       margin: 0;
+       padding: 20px;
+       background: black;
+       color: white;
+     }
+     a { color: #DDD; }
+     .container { max-width: 800px; margin: 0 auto; }
+     .footer { margin-top: 40px; }"))
 
 (-> page-generate-index () string)
 (defun page-generate-index ()
