@@ -1,0 +1,52 @@
+#+TITLE: Rust Course Server
+#+AUTHOR: Lukáš Hozda
+#+DATE: 2025
+
+* Overview
+
+A smol webserver for serving Rust programming course materials at MatFyz CUNI.
+
+* Installation
+
+** Prerequisites
+
+- SBCL or other Common Lisp implementation (CLASP is looking pretty hot right now)
+- Quicklisp
+
+Or just use the Nix flake, hehehehe.9
+** Setup
+
+#+begin_src bash
+# assuming you installed quicklisp and symlinked/cloned this into ~/common-lisp or ~/quicklist/local-projects
+(ql:quickload :matfyz)
+#+end_src
+
+* Usage
+
+** Starting the Server
+
+#+begin_src lisp
+(matfyz:start-server)
+#+end_src
+
+The server will start on port 27777 by default.
+
+** Stopping the Server
+
+#+begin_src lisp
+(matfyz:stop-server)
+#+end_src
+
+* Configuration
+
+Edit ~src/config.lisp~ to customize:
+- Port number
+- Author information  
+- Contact details
+- External resource links
+
+If you contributed anything, add yourself, my g.
+
+* License
+
+COLL (see LICENSE.lisp)
