@@ -51,6 +51,8 @@
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             sbcl'
+            typst
+            rustup
           ];
         };
       }
