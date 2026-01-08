@@ -60,7 +60,7 @@
      (dolist (dir (directory-list-subdirs *base-directory*))
        (let ((dir-name (directory-get-name dir)))
          (when (or (string= dir-name "advanced-rust")
-                   (string= dir-name "intro-rust"))
+                   (string= dir-name "basic-rust"))
            (:li (:a :href (format nil "/~A/" dir-name)
                     (name-humanize dir-name)))))))
     (:h2 "Rust Learning Resources")

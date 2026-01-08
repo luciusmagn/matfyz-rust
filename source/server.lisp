@@ -7,7 +7,7 @@
 
 (defun handler--course-paths (request)
   "Check if request matches course paths."
-  (scan "^/(advanced|intro)-rust/?$" (script-name* request)))
+  (scan "^/(advanced|basic)-rust/?$" (script-name* request)))
 
 (define-easy-handler (course :uri #'handler--course-paths) ()
   (setf (content-type*) "text/html")
@@ -17,7 +17,7 @@
 
 (defun handler--lab-paths (request)
   "Check if request matches lab paths."
-  (scan "^/(advanced|intro)-rust/.+/?$" (script-name* request)))
+  (scan "^/(advanced|basic)-rust/.+/?$" (script-name* request)))
 
 (define-easy-handler (lab :uri #'handler--lab-paths) ()
   (setf (content-type*) "text/html")
