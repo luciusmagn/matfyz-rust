@@ -17,6 +17,28 @@
 
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
+  (-> course-display-name (string) string)
+  (defun course-display-name (course-name)
+    "Return human-facing name for known course directories."
+    (cond
+      ((string= course-name "basic-rust") "Introductory Rust (old)")
+      ((string= course-name "advanced-rust") "Advanced Rust (old)")
+      (t (name-humanize course-name))))
+
+  (-> course-unit-title (string) string)
+  (defun course-unit-title (unit-name)
+    "Return label for a course unit (lecture/lab directory)."
+    (if (scan "^lab-" unit-name)
+        (format nil "Lab: ~A" (name-humanize unit-name))
+        (format nil "Lecture: ~A" (name-humanize unit-name))))
+
+  (-> sort-pathnames-by-name ((list-of pathname)) (list-of pathname))
+  (defun sort-pathnames-by-name (paths)
+    "Sort PATHS by file/directory name."
+    (sort (copy-list paths)
+          #'string<
+          :key #'file-namestring))
+
   (defun page--render-footer ()
     "Render the page footer."
     `(:div :class "footer"
@@ -55,14 +77,22 @@
     (:h1 "Rust @ MatFyz CUNI")
     (:p "It is a good language, you should learn it. "
         "Here are the course materials and some other resources.")
-    (:h2 "Course Materials")
+    (:h2 "Legacy Course Materials")
     (:ul
      (dolist (dir (directory-list-subdirs *base-directory*))
        (let ((dir-name (directory-get-name dir)))
          (when (or (string= dir-name "advanced-rust")
                    (string= dir-name "basic-rust"))
            (:li (:a :href (format nil "/~A/" dir-name)
-                    (name-humanize dir-name)))))))
+                    (course-display-name dir-name)))))))
+    (:h2 "2026 Course Resources")
+    (:ul
+     (:li (:a :href "https://d3s.mff.cuni.cz/teaching/rust"
+              "Introductory Rust (2026)"))
+     (:li (:a :href "https://d3s.mff.cuni.cz/teaching/morerust"
+              "Advanced Rust (2026)"))
+     (:li (:a :href "https://matfyz.lho.sh"
+              "Legacy materials mirror (matfyz.lho.sh)")))
     (:h2 "Rust Learning Resources")
     (:ul 
      (dolist (resource *rust-resources*)
@@ -74,15 +104,28 @@
   (let ((course-path (merge-pathnames 
                       (make-pathname :directory (list :relative course-name))
                       *base-directory*)))
-    (with-page (:title (name-humanize course-name))
-      (:h1 (name-humanize course-name))
+    (with-page (:title (course-display-name course-name))
+      (:h1 (course-display-name course-name))
       (:p (:a :href "/" "← Back"))
-      (:h2 "Labs")
+      (:h2 "Material Units")
       (:ul
-       (dolist (lab-dir (directory-list-subdirs course-path))
-         (let ((lab-name (directory-get-name lab-dir)))
-           (:li (:a :href (format nil "/~A/~A/" course-name lab-name)
-                    (name-humanize lab-name)))))))))
+       (dolist (unit-dir (sort (copy-list (directory-list-subdirs course-path))
+                               #'string<
+                               :key #'directory-get-name))
+         (let ((unit-name (directory-get-name unit-dir)))
+           (:li (:a :href (format nil "/~A/~A/" course-name unit-name)
+                    (course-unit-title unit-name))))))
+      (let ((root-files (sort-pathnames-by-name (directory-list-files course-path))))
+        (when root-files
+          (:h2 "General Files")
+          (:ul
+           (dolist (file root-files)
+             (let ((file-name (file-namestring file))
+                   (extension (string-downcase (subseq (file-get-extension file) 1))))
+               (:li (:a :href (format nil "/~A/~A" course-name file-name)
+                        (format nil "~A (~A)"
+                                (name-humanize (file-get-basename file))
+                                extension)))))))))))
 
 (-> page-generate-lab (string string) string)
 (defun page-generate-lab (course-name lab-name)
