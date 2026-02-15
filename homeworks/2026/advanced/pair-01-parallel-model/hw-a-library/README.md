@@ -15,7 +15,7 @@ pub fn parallel_chunk_sums(values: Vec<i64>, workers: usize) -> Vec<i64>;
 pub fn parallel_weighted_checksum(values: Vec<i64>, workers: usize) -> i64;
 ```
 
-### Behavior contract
+## Behavior contract
 
 1. `make_chunks`:
 - `effective_workers = max(1, min(workers, max(len, 1)))`
@@ -34,13 +34,6 @@ pub fn parallel_weighted_checksum(values: Vec<i64>, workers: usize) -> i64;
 - Compute `sum((index + 1) * value)` over full input.
 - Result must match sequential semantics exactly.
 - For empty input, return `0`.
-
-## Testing contract
-
-1. Tests are Rust files named `test-XYZ.rs`.
-2. Each test is renamed to `main.rs` and compiled with your `solution.rs` as `mod solution;`.
-3. Stdout is compared with matching `test-XYZ.out.txt`.
-4. Output comparison is lenient about trailing whitespace and missing final newline.
 
 ## Requirements
 

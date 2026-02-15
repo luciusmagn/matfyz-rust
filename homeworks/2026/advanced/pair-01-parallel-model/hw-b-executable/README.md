@@ -43,12 +43,6 @@ total_checksum=<sum of all job checksums>
 
 Use `workers` as the desired parallelism level when processing jobs, but final observable output must stay deterministic.
 
-## Testing contract
-
-1. Tests are `*.in.txt` / matching `*.out.txt` files.
-2. Program stdout is compared against expected output.
-3. Output comparison is lenient about trailing whitespace and missing final newline.
-
 ## Requirements
 
 1. Parse input exactly as described.
