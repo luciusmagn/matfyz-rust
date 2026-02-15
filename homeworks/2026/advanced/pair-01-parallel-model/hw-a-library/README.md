@@ -1,21 +1,49 @@
-# A1A Parallel Abstraction API
+# A1A Parallel Chunk Processing Library
 
-Course track: Advanced Rust (2026)
-Homework pair: A1
-Type: library
+Course track: Advanced Rust (2026)  
+Homework pair: A1  
+Type: library  
 Submission filename: `solution.rs`
 
-Goal:
-Implement the required library API in `solution.rs` so that test drivers in `tests/test-*.rs` can import and exercise it.
+## Task
 
-Testing contract:
+Implement the required API in `solution.rs`:
 
-1. Each test driver is a Rust file named `test-XYZ.rs`.
-2. Each test declares `mod solution;`.
-3. Test stdout is compared against `test-XYZ.out.txt`.
-4. Output comparison is lenient about trailing whitespace and final newline.
+```rust
+pub fn make_chunks(len: usize, workers: usize) -> Vec<(usize, usize)>;
+pub fn parallel_chunk_sums(values: Vec<i64>, workers: usize) -> Vec<i64>;
+pub fn parallel_weighted_checksum(values: Vec<i64>, workers: usize) -> i64;
+```
 
-Notes:
+### Behavior contract
 
-1. Keep API behavior deterministic.
-2. Avoid printing from library functions unless assignment explicitly requires it.
+1. `make_chunks`:
+- `effective_workers = max(1, min(workers, max(len, 1)))`
+- For `i` in `0..effective_workers`:
+  - `start = i * len / effective_workers`
+  - `end = (i + 1) * len / effective_workers`
+- Return chunk boundaries in worker order.
+- For `len == 0`, return exactly `[(0, 0)]`.
+
+2. `parallel_chunk_sums`:
+- Split with `make_chunks(values.len(), workers)`.
+- Compute one sum per chunk, preserving chunk order in output.
+- For empty input, return `[0]`.
+
+3. `parallel_weighted_checksum`:
+- Compute `sum((index + 1) * value)` over full input.
+- Result must match sequential semantics exactly.
+- For empty input, return `0`.
+
+## Testing contract
+
+1. Tests are Rust files named `test-XYZ.rs`.
+2. Each test is renamed to `main.rs` and compiled with your `solution.rs` as `mod solution;`.
+3. Stdout is compared with matching `test-XYZ.out.txt`.
+4. Output comparison is lenient about trailing whitespace and missing final newline.
+
+## Requirements
+
+1. Keep the API signatures exactly as specified.
+2. Keep output behavior deterministic.
+3. Do not print from library functions.

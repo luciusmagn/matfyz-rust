@@ -1,1 +1,6 @@
-# TODO: define expected output for case 04
+job 7: sum=30 checksum=70
+job 8: sum=0 checksum=-3
+job 12: sum=-18 checksum=-63
+job 50: sum=0 checksum=-16
+total_sum=12
+total_checksum=-12

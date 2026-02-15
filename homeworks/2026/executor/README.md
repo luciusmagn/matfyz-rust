@@ -36,6 +36,8 @@ python3 homeworks/2026/executor/run_homework.py library \
 
 - `--cargo-template`: path to Cargo.toml template
   - default: `recodex-envs-and-utils/rust-cargo-builder/Cargo.toml`
+- `--timeout-seconds N`: timeout per cargo command (default `8.0`)
+- `--release`: run build/tests with `cargo --release`
 - `--extra FILE`: add extra student `.rs` files (repeatable)
 - `--ignore-empty-lines`: optionally ignore empty lines in output comparison
 
@@ -50,3 +52,7 @@ Always applied:
 Optional:
 
 - `--ignore-empty-lines` removes all blank lines before comparison.
+
+## Project template parity
+
+The runner copies `Cargo.toml` and, when available, also reuses adjacent `.cargo/`, `Cargo.lock`, and `vendor/` from the template directory.

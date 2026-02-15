@@ -1,6 +1,7 @@
 mod solution;
 
 fn main() {
-    // TODO: call solution API for test-03
-    println!("TODO test-03");
+    let values = vec![5, -2, 7, 0, 4, -1, 3];
+    println!("{:?}", solution::parallel_chunk_sums(values.clone(), 4));
+    println!("{}", solution::parallel_weighted_checksum(values, 4));
 }
