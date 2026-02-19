@@ -1,0 +1,16 @@
+#+TITLE: Introductory Rust 2026 - Lab 1: Ownership and Borrowing
+#+AUTHOR: Lukáš Hozda
+#+DATE: Winter 2026/27
+
+* Lab Goals
+
+1. Practice move/borrow reasoning in short programs.
+2. Design signatures using owned vs borrowed inputs.
+3. Prepare for homework pair I1.
+
+* Exercises
+
+1. Fix move errors in a parser function.
+2. Refactor helper functions to take `&str` instead of `String` where possible.
+3. Implement `fn normalize_words(input: &str) -> Vec<String>` with zero unnecessary clones.
+4. Add tests for empty input and repeated spaces.
