@@ -1,0 +1,15 @@
+#+TITLE: Introductory Rust 2026 - Lab 3: Structs, Modules, and Errors
+#+AUTHOR: Lukáš Hozda
+#+DATE: Winter 2026/27
+
+* Lab Goals
+
+1. Organize code into modules.
+2. Define domain structs with constructors and methods.
+3. Implement explicit error enums.
+
+* Exercises
+
+1. Build `Record` struct and parser from `name:value` lines.
+2. Split parser and domain logic into separate modules.
+3. Add `Result`-based API and unit tests for malformed input.
