@@ -1,21 +1,42 @@
-# A4B Contract Harness
+# A4B Config Canonicalizer
 
-Course track: Advanced Rust (2026)
-Homework pair: A4
-Type: executable
+Course track: Advanced Rust (2026)  
+Homework pair: A4  
+Type: executable  
 Submission filename: `main.rs`
 
-Goal:
-Implement the executable behavior described in this assignment and produce deterministic stdout for all provided test cases.
+## Task
 
-Testing contract:
+Write a program that canonicalizes key-value pairs.
 
-1. Tests are text input/output files in `tests/`.
-2. Input files use `*.in.txt`.
-3. Expected output files use matching `*.out.txt`.
-4. Output comparison is lenient about trailing whitespace and final newline.
+## Input format
 
-Notes:
+1. Line 1: `n` (number of records).
+2. Next `n` lines: `key=value` where value is `i64`.
 
-1. Keep output deterministic.
-2. Do not print extra debug output in final submission.
+## Validation
+
+A record is invalid if:
+
+1. It does not contain `=`.
+2. Key is empty after trimming.
+3. Value is not a valid `i64`.
+
+If any record is invalid, print exactly:
+
+```text
+error
+```
+
+and terminate.
+
+## Output format (valid input)
+
+1. Print canonical records sorted by key: `key=value`.
+2. If duplicate key appears, keep the latest value.
+3. Print final line: `total=<sum of values>`.
+
+## Requirements
+
+1. Output must be deterministic.
+2. Do not print debug output.

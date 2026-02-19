@@ -1,1 +1,4 @@
-# TODO: define input for case 04
+3
+ok=1
+ =2
+z=3

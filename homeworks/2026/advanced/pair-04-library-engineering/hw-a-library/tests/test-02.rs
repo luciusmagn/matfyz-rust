@@ -1,6 +1,6 @@
 mod solution;
 
 fn main() {
-    // TODO: call solution API for test-02
-    println!("TODO test-02");
+    let cfg = "x=1\nx=2\n";
+    println!("{:?}", solution::parse_config(cfg));
 }

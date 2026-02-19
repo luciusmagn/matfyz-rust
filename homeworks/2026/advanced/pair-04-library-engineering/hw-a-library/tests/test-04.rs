@@ -1,6 +1,8 @@
 mod solution;
 
 fn main() {
-    // TODO: call solution API for test-04
-    println!("TODO test-04");
+    let cfg = "\n  aa = -4\n bb = 8 \n";
+    let map = solution::parse_config(cfg).unwrap();
+    println!("{}", solution::render_config(&map));
+    println!("{}", solution::sum_values(&map));
 }

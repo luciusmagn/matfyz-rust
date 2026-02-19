@@ -1,1 +1,4 @@
-# TODO: define expected output for case 01
+a=1
+b=5
+c=-3
+total=3

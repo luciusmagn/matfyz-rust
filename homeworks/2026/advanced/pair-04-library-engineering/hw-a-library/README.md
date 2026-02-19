@@ -1,21 +1,48 @@
-# A4A Public API Stability Task
+# A4A Config Library Contract
 
-Course track: Advanced Rust (2026)
-Homework pair: A4
-Type: library
+Course track: Advanced Rust (2026)  
+Homework pair: A4  
+Type: library  
 Submission filename: `solution.rs`
 
-Goal:
-Implement the required library API in `solution.rs` so that test drivers in `tests/test-*.rs` can import and exercise it.
+## Task
 
-Testing contract:
+Implement a small configuration library in `solution.rs`.
 
-1. Each test driver is a Rust file named `test-XYZ.rs`.
-2. Each test declares `mod solution;`.
-3. Test stdout is compared against `test-XYZ.out.txt`.
-4. Output comparison is lenient about trailing whitespace and final newline.
+Required API:
 
-Notes:
+```rust
+use std::collections::BTreeMap;
 
-1. Keep API behavior deterministic.
-2. Avoid printing from library functions unless assignment explicitly requires it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ConfigError {
+    MissingEquals(usize),
+    EmptyKey(usize),
+    InvalidValue(usize),
+    DuplicateKey(String),
+}
+
+pub fn parse_config(input: &str) -> Result<BTreeMap<String, i64>, ConfigError>;
+pub fn render_config(map: &BTreeMap<String, i64>) -> String;
+pub fn sum_values(map: &BTreeMap<String, i64>) -> i64;
+```
+
+## Parsing rules
+
+1. Empty lines are ignored.
+2. Non-empty line must have exactly one `=` split point (`key=value`).
+3. Key is trimmed and must be non-empty.
+4. Value is trimmed and must parse as `i64`.
+5. Duplicate keys are rejected as `DuplicateKey`.
+6. Error line numbers are 1-based in original input.
+
+## Rendering rules
+
+1. Emit lines as `key=value` in sorted key order (BTreeMap iteration order).
+2. Join lines with `\n` and no trailing newline.
+
+## Requirements
+
+1. Keep behavior deterministic.
+2. Keep signatures exactly as specified.
+3. Do not print from library functions.
