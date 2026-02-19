@@ -1,19 +1,29 @@
-# Rust Homeworks 2026 (Draft Scaffold)
+# Rust Homeworks 2026
 
-This folder contains draft homework scaffolding for:
+This folder contains complete homework sets for:
 
 1. Introductory Rust (2026)
 2. Advanced Rust (2026)
 
-Structure rules:
+Organization:
 
-1. Homeworks are grouped in lecture-linked pairs (`pair-XX-*`).
-2. Each pair contains:
-   - one executable homework (`hw-a-executable`)
-   - one library homework (`hw-b-library`)
-3. Default submission files:
-   - executable: `main.rs`
-   - library: `solution.rs`
-4. Each homework should keep at least 4 tests.
+1. Homeworks are grouped by lecture-linked pairs (`pair-XX-*`).
+2. Introductory pairs:
+   - `hw-a-executable`
+   - `hw-b-library`
+3. Advanced pairs:
+   - `hw-a-library`
+   - `hw-b-executable`
+4. Every homework includes:
+   - assignment `README.md`
+   - reference solution in `reference/`
+   - at least four tests in `tests/`
 
-Use the local runner in `homeworks/2026/executor/` for quick checks before publishing to ReCodEx.
+Submission filenames:
+
+1. Executable homework: `main.rs`
+2. Library homework: `solution.rs`
+
+Local checking:
+
+Use `homeworks/2026/executor/run_homework.py` to run either mode against reference solutions or candidate student submissions before publishing to ReCodEx.
