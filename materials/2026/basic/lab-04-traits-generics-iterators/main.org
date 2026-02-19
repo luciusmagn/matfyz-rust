@@ -1,0 +1,15 @@
+#+TITLE: Introductory Rust 2026 - Lab 4: Traits, Generics, Iterators
+#+AUTHOR: Lukáš Hozda
+#+DATE: Winter 2026/27
+
+* Lab Goals
+
+1. Write reusable generic helpers.
+2. Implement traits for custom types.
+3. Use iterator pipelines for deterministic transformations.
+
+* Exercises
+
+1. Implement generic `top_n` helper with trait bounds.
+2. Add trait `Score` for two domain structs.
+3. Build pipeline using `filter`, `map`, `fold` and compare with loop-based version.
