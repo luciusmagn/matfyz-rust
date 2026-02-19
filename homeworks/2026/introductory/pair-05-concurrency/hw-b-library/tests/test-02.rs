@@ -1,6 +1,6 @@
 mod solution;
 
 fn main() {
-    // TODO: call solution API for test-02
-    println!("TODO test-02");
+    let out = solution::dispatch_jobs(vec![1, 2, 3, 4], 2);
+    println!("{:?}", out);
 }

@@ -1,1 +1,4 @@
-# TODO: define expected output for case 01
+chunk 0=3
+chunk 1=12
+chunk 2=21
+total=36

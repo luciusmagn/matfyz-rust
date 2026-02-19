@@ -1,6 +1,5 @@
 mod solution;
 
 fn main() {
-    // TODO: call solution API for test-03
-    println!("TODO test-03");
+    println!("{}", solution::parallel_square_sum(vec![2, -3, 4], 3));
 }

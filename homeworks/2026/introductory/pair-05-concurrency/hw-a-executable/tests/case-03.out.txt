@@ -1,1 +1,2 @@
-# TODO: define expected output for case 03
+chunk 0=0
+total=0

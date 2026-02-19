@@ -1,21 +1,38 @@
-# I5A Deterministic Worker Runtime
+# I5A Deterministic Parallel Chunk Sum
 
-Course track: Introductory Rust (2026)
-Homework pair: I5
-Type: executable
+Course track: Introductory Rust (2026)  
+Homework pair: I5  
+Type: executable  
 Submission filename: `main.rs`
 
-Goal:
-Implement the executable behavior described in this assignment and produce deterministic stdout for all provided test cases.
+## Task
 
-Testing contract:
+Split numeric input into worker chunks, process in parallel, and print deterministic output.
 
-1. Tests are text input/output files in `tests/`.
-2. Input files use `*.in.txt`.
-3. Expected output files use matching `*.out.txt`.
-4. Output comparison is lenient about trailing whitespace and final newline.
+## Input format
 
-Notes:
+1. Line 1: `workers` (positive integer)
+2. Line 2: `n` (number of values)
+3. Line 3: exactly `n` signed integers separated by spaces
 
-1. Keep output deterministic.
-2. Do not print extra debug output in final submission.
+## Output format
+
+For each chunk in chunk index order:
+
+```text
+chunk <idx>=<chunk_sum>
+```
+
+Then:
+
+```text
+total=<sum_of_all_values>
+```
+
+Chunk ranges use:
+
+- `effective_workers = max(1, min(workers, max(n, 1)))`
+- `start = i * n / effective_workers`
+- `end = (i + 1) * n / effective_workers`
+
+For `n = 0`, produce one chunk `0..0`.
