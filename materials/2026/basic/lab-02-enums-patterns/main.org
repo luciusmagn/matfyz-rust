@@ -1,0 +1,15 @@
+#+TITLE: Introductory Rust 2026 - Lab 2: Enums and Pattern Matching
+#+AUTHOR: Lukáš Hozda
+#+DATE: Winter 2026/27
+
+* Lab Goals
+
+1. Model finite state with enums.
+2. Use exhaustive matching for command processing.
+3. Prepare for homework pair I2.
+
+* Exercises
+
+1. Build enum-based command parser (`add`, `sub`, `print`).
+2. Handle parse failures with `Result`.
+3. Convert nested `match` into helper functions with clear error types.
