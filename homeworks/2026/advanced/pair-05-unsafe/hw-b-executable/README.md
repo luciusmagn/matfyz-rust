@@ -1,21 +1,47 @@
-# A5B Wrapper Behavior Verification
+# A5B Bounded Stack Processor
 
-Course track: Advanced Rust (2026)
-Homework pair: A5
-Type: executable
+Course track: Advanced Rust (2026)  
+Homework pair: A5  
+Type: executable  
 Submission filename: `main.rs`
 
-Goal:
-Implement the executable behavior described in this assignment and produce deterministic stdout for all provided test cases.
+## Task
 
-Testing contract:
+Write a program that executes stack commands with fixed capacity.
 
-1. Tests are text input/output files in `tests/`.
-2. Input files use `*.in.txt`.
-3. Expected output files use matching `*.out.txt`.
-4. Output comparison is lenient about trailing whitespace and final newline.
+## Input format
 
-Notes:
+1. Line 1: `capacity` (non-negative integer).
+2. Line 2: `n` (number of commands).
+3. Next `n` lines, one command each:
+- `push X`
+- `pop`
+- `peek`
 
-1. Keep output deterministic.
-2. Do not print extra debug output in final submission.
+`X` is signed `i64`.
+
+## Output rules
+
+For each command print:
+
+1. `push X`
+- success: `ok`
+- when stack full: `full`
+2. `pop`
+- when non-empty: popped value
+- when empty: `empty`
+3. `peek`
+- when non-empty: top value
+- when empty: `empty`
+
+After all commands print:
+
+```text
+size=<current_size>
+```
+
+## Requirements
+
+1. Parse and execute commands in order.
+2. Keep output exactly deterministic.
+3. Do not print debug output.

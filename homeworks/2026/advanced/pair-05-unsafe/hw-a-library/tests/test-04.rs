@@ -1,6 +1,9 @@
 mod solution;
 
 fn main() {
-    // TODO: call solution API for test-04
-    println!("TODO test-04");
+    let data: [i64; 0] = [];
+    let view = solution::CheckedSlice::new(&data);
+    println!("{}", view.len());
+    println!("{:?}", view.window_sum(0, 0));
+    println!("{}", solution::checksum(&data));
 }

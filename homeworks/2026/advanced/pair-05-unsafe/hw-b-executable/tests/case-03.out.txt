@@ -1,1 +1,6 @@
-# TODO: define expected output for case 03
+ok
+ok
+7
+7
+-5
+size=1

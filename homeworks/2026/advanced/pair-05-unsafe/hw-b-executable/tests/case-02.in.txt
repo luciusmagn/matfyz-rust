@@ -1,1 +1,5 @@
-# TODO: define input for case 02
+0
+3
+push 1
+peek
+pop

@@ -1,1 +1,5 @@
-# TODO: define expected output for case 04
+empty
+ok
+empty
+9
+size=1
