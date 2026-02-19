@@ -1,6 +1,6 @@
 mod solution;
 
 fn main() {
-    // TODO: call solution API for test-01
-    println!("TODO test-01");
+    let ws = solution::normalize_words("Hello RUST hello");
+    println!("{}", solution::join_with_comma(&ws));
 }

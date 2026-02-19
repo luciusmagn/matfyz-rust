@@ -1,21 +1,37 @@
-# I1A Ownership Pipeline
+# I1A Word Ownership Pipeline
 
-Course track: Introductory Rust (2026)
-Homework pair: I1
-Type: executable
+Course track: Introductory Rust (2026)  
+Homework pair: I1  
+Type: executable  
 Submission filename: `main.rs`
 
-Goal:
-Implement the executable behavior described in this assignment and produce deterministic stdout for all provided test cases.
+## Task
 
-Testing contract:
+Write a program that processes words and prints a deterministic report.
 
-1. Tests are text input/output files in `tests/`.
-2. Input files use `*.in.txt`.
-3. Expected output files use matching `*.out.txt`.
-4. Output comparison is lenient about trailing whitespace and final newline.
+## Input format
 
-Notes:
+1. Line 1: `n` (number of words).
+2. Next `n` lines: one word per line.
 
-1. Keep output deterministic.
-2. Do not print extra debug output in final submission.
+## Output format
+
+For each input word at index `i` (starting from 0), print:
+
+```text
+i:<len>:<reversed_word>
+```
+
+After all lines print:
+
+```text
+total_chars=<sum_of_lengths>
+```
+
+If input is incomplete or invalid, print `invalid input` and terminate.
+
+## Requirements
+
+1. Keep output order exactly as input order.
+2. Handle empty word lines correctly.
+3. Do not print debug output.

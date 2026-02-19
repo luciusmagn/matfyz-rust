@@ -1,6 +1,7 @@
 mod solution;
 
 fn main() {
-    // TODO: call solution API for test-02
-    println!("TODO test-02");
+    let ws = solution::normalize_words("bb aa bb cc");
+    let uniq = solution::unique_sorted(&ws);
+    println!("{}", solution::join_with_comma(&uniq));
 }

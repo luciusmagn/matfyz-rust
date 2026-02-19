@@ -1,1 +1,4 @@
-# TODO: define input for case 01
+3
+rust
+abc
+Z

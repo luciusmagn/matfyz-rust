@@ -1,1 +1,2 @@
-# TODO: define expected output for case 04
+0:8:eno-ylno
+invalid input

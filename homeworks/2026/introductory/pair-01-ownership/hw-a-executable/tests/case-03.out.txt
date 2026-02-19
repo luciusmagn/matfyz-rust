@@ -1,1 +1,2 @@
-# TODO: define expected output for case 03
+0:5:ýtulž
+total_chars=5

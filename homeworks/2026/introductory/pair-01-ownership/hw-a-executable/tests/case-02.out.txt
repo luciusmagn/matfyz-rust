@@ -1,1 +1,3 @@
-# TODO: define expected output for case 02
+0:0:
+1:2:yx
+total_chars=2

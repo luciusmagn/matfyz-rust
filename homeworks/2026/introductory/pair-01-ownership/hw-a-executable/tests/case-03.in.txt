@@ -1,1 +1,2 @@
-# TODO: define input for case 03
+1
+žlutý

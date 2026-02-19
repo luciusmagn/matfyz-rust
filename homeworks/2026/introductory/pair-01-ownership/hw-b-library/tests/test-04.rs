@@ -1,6 +1,7 @@
 mod solution;
 
 fn main() {
-    // TODO: call solution API for test-04
-    println!("TODO test-04");
+    let ws = vec!["žluťoučký".to_string(), "kůň".to_string(), "kůň".to_string()];
+    let uniq = solution::unique_sorted(&ws);
+    println!("{}", solution::join_with_comma(&uniq));
 }

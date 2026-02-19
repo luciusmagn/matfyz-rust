@@ -1,21 +1,34 @@
-# I1B Borrowing API
+# I1B Owned Word Utilities
 
-Course track: Introductory Rust (2026)
-Homework pair: I1
-Type: library
+Course track: Introductory Rust (2026)  
+Homework pair: I1  
+Type: library  
 Submission filename: `solution.rs`
 
-Goal:
-Implement the required library API in `solution.rs` so that test drivers in `tests/test-*.rs` can import and exercise it.
+## Task
 
-Testing contract:
+Implement the required API in `solution.rs`:
 
-1. Each test driver is a Rust file named `test-XYZ.rs`.
-2. Each test declares `mod solution;`.
-3. Test stdout is compared against `test-XYZ.out.txt`.
-4. Output comparison is lenient about trailing whitespace and final newline.
+```rust
+pub fn normalize_words(input: &str) -> Vec<String>;
+pub fn unique_sorted(words: &[String]) -> Vec<String>;
+pub fn join_with_comma(words: &[String]) -> String;
+```
 
-Notes:
+## Behavior contract
 
-1. Keep API behavior deterministic.
-2. Avoid printing from library functions unless assignment explicitly requires it.
+1. `normalize_words`:
+- split by whitespace
+- lowercase each token
+- return owned `Vec<String>`
+2. `unique_sorted`:
+- remove duplicates
+- return lexicographically sorted words
+3. `join_with_comma`:
+- join words with `,` and no trailing separator
+
+## Requirements
+
+1. Keep signatures exactly as specified.
+2. Keep output deterministic.
+3. Do not print from library functions.
