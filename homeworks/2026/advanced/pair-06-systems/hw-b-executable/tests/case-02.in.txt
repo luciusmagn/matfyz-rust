@@ -1,1 +1,4 @@
-# TODO: define input for case 02
+3
+INFO a
+INFO b
+WARN c

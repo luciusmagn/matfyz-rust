@@ -1,1 +1,5 @@
-# TODO: define input for case 03
+4
+
+a b c
+TRACE hi
+ERROR x

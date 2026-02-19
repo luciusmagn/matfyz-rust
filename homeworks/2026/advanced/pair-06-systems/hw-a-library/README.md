@@ -1,21 +1,40 @@
-# A6A Systems/FFI Wrappers
+# A6A Path Utility Library
 
-Course track: Advanced Rust (2026)
-Homework pair: A6
-Type: library
+Course track: Advanced Rust (2026)  
+Homework pair: A6  
+Type: library  
 Submission filename: `solution.rs`
 
-Goal:
-Implement the required library API in `solution.rs` so that test drivers in `tests/test-*.rs` can import and exercise it.
+## Task
 
-Testing contract:
+Implement path-processing helpers in `solution.rs`.
 
-1. Each test driver is a Rust file named `test-XYZ.rs`.
-2. Each test declares `mod solution;`.
-3. Test stdout is compared against `test-XYZ.out.txt`.
-4. Output comparison is lenient about trailing whitespace and final newline.
+Required API:
 
-Notes:
+```rust
+pub fn normalize_path(path: &str) -> String;
+pub fn join_path(base: &str, child: &str) -> String;
+pub fn split_extension(path: &str) -> (String, Option<String>);
+```
 
-1. Keep API behavior deterministic.
-2. Avoid printing from library functions unless assignment explicitly requires it.
+## Behavior contract
+
+1. `normalize_path`:
+- removes repeated `/`
+- removes `.` components
+- resolves `..` where possible
+- preserves leading `/` for absolute paths
+- returns `.` for empty relative result
+2. `join_path`:
+- if `child` is absolute, normalize and return `child`
+- else normalize `base + "/" + child`
+3. `split_extension`:
+- splits extension from final path segment
+- returns `(stem, Some(ext))` when extension exists
+- returns `(original_path, None)` otherwise
+
+## Requirements
+
+1. Deterministic behavior, no filesystem access required.
+2. Keep signatures exactly as specified.
+3. Do not print from library functions.

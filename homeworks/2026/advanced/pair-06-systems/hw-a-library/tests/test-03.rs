@@ -1,6 +1,6 @@
 mod solution;
 
 fn main() {
-    // TODO: call solution API for test-03
-    println!("TODO test-03");
+    println!("{}", solution::join_path("/srv/app", "logs/today.txt"));
+    println!("{}", solution::join_path("/srv/app", "/opt/data"));
 }

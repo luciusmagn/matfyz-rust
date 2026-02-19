@@ -1,21 +1,37 @@
-# A6B End-to-End Systems Tool
+# A6B Log Severity Summary
 
-Course track: Advanced Rust (2026)
-Homework pair: A6
-Type: executable
+Course track: Advanced Rust (2026)  
+Homework pair: A6  
+Type: executable  
 Submission filename: `main.rs`
 
-Goal:
-Implement the executable behavior described in this assignment and produce deterministic stdout for all provided test cases.
+## Task
 
-Testing contract:
+Write a program that summarizes log severities.
 
-1. Tests are text input/output files in `tests/`.
-2. Input files use `*.in.txt`.
-3. Expected output files use matching `*.out.txt`.
-4. Output comparison is lenient about trailing whitespace and final newline.
+## Input format
 
-Notes:
+1. Line 1: `n` (number of log lines)
+2. Next `n` lines: `LEVEL message...`
 
-1. Keep output deterministic.
-2. Do not print extra debug output in final submission.
+`LEVEL` may be `INFO`, `WARN`, `ERROR`, or anything else.
+
+## Output format
+
+Print exactly:
+
+```text
+INFO=<count>
+WARN=<count>
+ERROR=<count>
+OTHER=<count>
+status=<ok|degraded>
+```
+
+`status=degraded` if `ERROR > 0`, otherwise `status=ok`.
+
+## Requirements
+
+1. Count only first token as level.
+2. Empty lines count as `OTHER`.
+3. Keep formatting exact and deterministic.

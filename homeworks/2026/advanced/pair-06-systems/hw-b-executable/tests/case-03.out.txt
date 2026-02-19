@@ -1,1 +1,5 @@
-# TODO: define expected output for case 03
+INFO=0
+WARN=0
+ERROR=1
+OTHER=3
+status=degraded

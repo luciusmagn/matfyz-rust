@@ -1,1 +1,2 @@
-TODO test-04
+("/tmp/archive.tar", Some("gz"))
+(".gitignore", None)

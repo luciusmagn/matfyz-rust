@@ -1,1 +1,5 @@
-# TODO: define expected output for case 02
+INFO=2
+WARN=1
+ERROR=0
+OTHER=0
+status=ok

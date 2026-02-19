@@ -1,1 +1,2 @@
-TODO test-03
+/srv/app/logs/today.txt
+/opt/data
