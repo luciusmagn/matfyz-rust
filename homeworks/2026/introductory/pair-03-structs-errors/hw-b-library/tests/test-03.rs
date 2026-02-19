@@ -1,6 +1,11 @@
 mod solution;
 
 fn main() {
-    // TODO: call solution API for test-03
-    println!("TODO test-03");
+    let records = vec![
+        solution::parse_record("x:1").unwrap(),
+        solution::parse_record("y:2").unwrap(),
+        solution::parse_record("x:3").unwrap(),
+    ];
+    let map = solution::aggregate(&records);
+    println!("{}", solution::render(&map));
 }

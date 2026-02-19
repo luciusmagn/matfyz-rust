@@ -1,1 +1,3 @@
-# TODO: define expected output for case 01
+alice=7
+bob=10
+carol=1

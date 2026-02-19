@@ -1,21 +1,33 @@
-# I3B Builder + Error API
+# I3B Record Parsing Library
 
-Course track: Introductory Rust (2026)
-Homework pair: I3
-Type: library
+Course track: Introductory Rust (2026)  
+Homework pair: I3  
+Type: library  
 Submission filename: `solution.rs`
 
-Goal:
-Implement the required library API in `solution.rs` so that test drivers in `tests/test-*.rs` can import and exercise it.
+## Task
 
-Testing contract:
+Implement record parsing and aggregation helpers.
 
-1. Each test driver is a Rust file named `test-XYZ.rs`.
-2. Each test declares `mod solution;`.
-3. Test stdout is compared against `test-XYZ.out.txt`.
-4. Output comparison is lenient about trailing whitespace and final newline.
+Required API:
 
-Notes:
+```rust
+use std::collections::BTreeMap;
 
-1. Keep API behavior deterministic.
-2. Avoid printing from library functions unless assignment explicitly requires it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Record {
+    pub name: String,
+    pub value: i64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum RecordError {
+    MissingColon,
+    EmptyName,
+    InvalidValue,
+}
+
+pub fn parse_record(line: &str) -> Result<Record, RecordError>;
+pub fn aggregate(records: &[Record]) -> BTreeMap<String, i64>;
+pub fn render(map: &BTreeMap<String, i64>) -> String;
+```

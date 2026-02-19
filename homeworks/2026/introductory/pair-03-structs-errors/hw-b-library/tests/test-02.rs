@@ -1,6 +1,6 @@
 mod solution;
 
 fn main() {
-    // TODO: call solution API for test-02
-    println!("TODO test-02");
+    println!("{:?}", solution::parse_record("bad"));
+    println!("{:?}", solution::parse_record("a:xx"));
 }

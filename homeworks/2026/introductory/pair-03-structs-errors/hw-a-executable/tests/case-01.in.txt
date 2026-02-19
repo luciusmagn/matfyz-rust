@@ -1,1 +1,6 @@
-# TODO: define input for case 01
+5
+alice:10
+bob:2
+alice:-3
+carol:1
+bob:8

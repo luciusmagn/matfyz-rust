@@ -1,1 +1,1 @@
-TODO test-01
+Ok(Record { name: "alice", value: 10 })
