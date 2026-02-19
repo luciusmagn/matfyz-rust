@@ -1,6 +1,6 @@
 mod solution;
 
 fn main() {
-    // TODO: call solution API for test-01
-    println!("TODO test-01");
+    let xs = vec![3, 1, 9, 2, 9];
+    println!("{:?}", solution::top_n(&xs, 3));
 }

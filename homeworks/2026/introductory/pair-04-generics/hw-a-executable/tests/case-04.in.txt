@@ -1,1 +1,2 @@
-# TODO: define input for case 04
+3
+10 x 3

@@ -1,6 +1,7 @@
 mod solution;
 
 fn main() {
-    // TODO: call solution API for test-03
-    println!("TODO test-03");
+    let a = vec![1, 2, 3];
+    let b = vec![10, 20];
+    println!("{:?}", solution::interleave(&a, &b));
 }

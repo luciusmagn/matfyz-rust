@@ -1,1 +1,4 @@
-# TODO: define expected output for case 01
+unique=1,2,4,9
+sum=22
+min=1
+max=9

@@ -1,6 +1,7 @@
 mod solution;
 
 fn main() {
-    // TODO: call solution API for test-04
-    println!("TODO test-04");
+    let xs = vec![5, 4, 3];
+    println!("{:?}", solution::top_n(&xs, 0));
+    println!("{:?}", solution::frequencies::<i64>(&[]));
 }

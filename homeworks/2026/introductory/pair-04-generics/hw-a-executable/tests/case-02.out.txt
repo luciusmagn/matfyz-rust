@@ -1,1 +1,4 @@
-# TODO: define expected output for case 02
+unique=
+sum=0
+min=none
+max=none

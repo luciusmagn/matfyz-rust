@@ -1,21 +1,22 @@
-# I4B Trait-Based Generic Toolkit
+# I4B Generic Utility Library
 
-Course track: Introductory Rust (2026)
-Homework pair: I4
-Type: library
+Course track: Introductory Rust (2026)  
+Homework pair: I4  
+Type: library  
 Submission filename: `solution.rs`
 
-Goal:
-Implement the required library API in `solution.rs` so that test drivers in `tests/test-*.rs` can import and exercise it.
+## Task
 
-Testing contract:
+Implement generic utility functions:
 
-1. Each test driver is a Rust file named `test-XYZ.rs`.
-2. Each test declares `mod solution;`.
-3. Test stdout is compared against `test-XYZ.out.txt`.
-4. Output comparison is lenient about trailing whitespace and final newline.
+```rust
+pub fn top_n<T: Ord + Clone>(values: &[T], n: usize) -> Vec<T>;
+pub fn frequencies<T: Ord + Clone>(values: &[T]) -> Vec<(T, usize)>;
+pub fn interleave<T: Clone>(a: &[T], b: &[T]) -> Vec<T>;
+```
 
-Notes:
+## Behavior contract
 
-1. Keep API behavior deterministic.
-2. Avoid printing from library functions unless assignment explicitly requires it.
+1. `top_n`: return at most `n` largest elements in descending order.
+2. `frequencies`: return `(value, count)` sorted by value ascending.
+3. `interleave`: alternate from `a`, `b`, then append leftovers.
