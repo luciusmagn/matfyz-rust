@@ -1,6 +1,8 @@
+#[macro_use]
 mod solution;
 
 fn main() {
-    // TODO: call solution API for test-02
-    println!("TODO test-02");
+    let v = repeat_vec!(String::from("x"); 4);
+    println!("{}", v.join(""));
+    println!("{}", v.len());
 }

@@ -1,21 +1,36 @@
-# A3B Macro Consumer Runner
+# A3B Arithmetic Command Evaluator
 
-Course track: Advanced Rust (2026)
-Homework pair: A3
-Type: executable
+Course track: Advanced Rust (2026)  
+Homework pair: A3  
+Type: executable  
 Submission filename: `main.rs`
 
-Goal:
-Implement the executable behavior described in this assignment and produce deterministic stdout for all provided test cases.
+## Task
 
-Testing contract:
+Write a program that evaluates simple arithmetic commands.
 
-1. Tests are text input/output files in `tests/`.
-2. Input files use `*.in.txt`.
-3. Expected output files use matching `*.out.txt`.
-4. Output comparison is lenient about trailing whitespace and final newline.
+## Input format
 
-Notes:
+1. Line 1: `n` (number of commands).
+2. Next `n` lines: `op a b` where:
+- `op` is one of `add`, `sub`, `mul`, `div`
+- `a`, `b` are signed integers (`i64`)
 
-1. Keep output deterministic.
-2. Do not print extra debug output in final submission.
+## Output format
+
+For each command:
+
+- valid command: print numeric result
+- invalid command (unknown op, parse failure, division by zero): print `err`
+
+After all commands print:
+
+```text
+ok=<count_ok> err=<count_err>
+```
+
+## Requirements
+
+1. Keep output line count exactly as specified.
+2. Use deterministic formatting.
+3. Do not print debug output.

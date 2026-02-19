@@ -1,1 +1,5 @@
-# TODO: define input for case 02
+4
+mod 7 2
+add 1 x
+bad line
+mul 3 3

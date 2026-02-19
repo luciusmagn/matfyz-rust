@@ -1,6 +1,8 @@
+#[macro_use]
 mod solution;
 
 fn main() {
-    // TODO: call solution API for test-04
-    println!("TODO test-04");
+    println!("{:?}", csv_line!());
+    let v: Vec<i32> = repeat_vec!(3; 0);
+    println!("{}", v.len());
 }

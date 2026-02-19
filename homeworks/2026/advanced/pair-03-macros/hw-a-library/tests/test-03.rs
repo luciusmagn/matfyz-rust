@@ -1,6 +1,8 @@
+#[macro_use]
 mod solution;
 
 fn main() {
-    // TODO: call solution API for test-03
-    println!("TODO test-03");
+    let row = csv_line!("log", 42, "ok");
+    let joined = solution::join_nonempty(&[&row, "", "done"]);
+    println!("{joined}");
 }
