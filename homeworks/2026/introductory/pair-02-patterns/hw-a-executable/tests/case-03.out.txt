@@ -1,1 +1,2 @@
-# TODO: define expected output for case 03
+14
+final=13

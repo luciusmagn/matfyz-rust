@@ -1,1 +1,3 @@
-# TODO: define expected output for case 04
+err
+0
+final=2

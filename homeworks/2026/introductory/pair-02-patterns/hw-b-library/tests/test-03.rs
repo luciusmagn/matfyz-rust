@@ -1,6 +1,6 @@
 mod solution;
 
 fn main() {
-    // TODO: call solution API for test-03
-    println!("TODO test-03");
+    let out = solution::run_program(&["add 4", "print", "sub 1", "print"]);
+    println!("{:?}", out);
 }

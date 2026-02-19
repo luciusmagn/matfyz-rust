@@ -1,6 +1,7 @@
 mod solution;
 
 fn main() {
-    // TODO: call solution API for test-02
-    println!("TODO test-02");
+    let mut s = 2;
+    println!("{:?}", solution::apply_op(&mut s, &solution::Op::Mul(5)));
+    println!("{:?}", solution::apply_op(&mut s, &solution::Op::Print));
 }

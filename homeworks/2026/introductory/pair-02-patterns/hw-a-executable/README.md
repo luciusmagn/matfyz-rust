@@ -1,21 +1,30 @@
-# I2A Enum Command Engine
+# I2A Stateful Command Processor
 
-Course track: Introductory Rust (2026)
-Homework pair: I2
-Type: executable
+Course track: Introductory Rust (2026)  
+Homework pair: I2  
+Type: executable  
 Submission filename: `main.rs`
 
-Goal:
-Implement the executable behavior described in this assignment and produce deterministic stdout for all provided test cases.
+## Task
 
-Testing contract:
+Implement a command interpreter over one integer state.
 
-1. Tests are text input/output files in `tests/`.
-2. Input files use `*.in.txt`.
-3. Expected output files use matching `*.out.txt`.
-4. Output comparison is lenient about trailing whitespace and final newline.
+## Input format
 
-Notes:
+1. Line 1: `n` (number of commands)
+2. Next `n` lines, command forms:
+- `add X`
+- `sub X`
+- `mul X`
+- `reset`
+- `print`
 
-1. Keep output deterministic.
-2. Do not print extra debug output in final submission.
+`X` is signed `i64`.
+
+## Output format
+
+1. For each `print`, output current state value on a separate line.
+2. For malformed/unknown command, output `err`.
+3. After all commands output `final=<state>`.
+
+State starts at `0`.

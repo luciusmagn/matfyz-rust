@@ -1,1 +1,5 @@
-# TODO: define input for case 03
+4
+add -7
+mul -2
+print
+sub 1

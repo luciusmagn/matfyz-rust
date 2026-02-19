@@ -1,6 +1,6 @@
 mod solution;
 
 fn main() {
-    // TODO: call solution API for test-01
-    println!("TODO test-01");
+    println!("{:?}", solution::parse_op("add 10"));
+    println!("{:?}", solution::parse_op("mul x"));
 }

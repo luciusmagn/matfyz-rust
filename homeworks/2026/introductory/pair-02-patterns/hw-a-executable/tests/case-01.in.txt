@@ -1,1 +1,7 @@
-# TODO: define input for case 01
+6
+add 5
+print
+mul 3
+sub 4
+print
+reset
