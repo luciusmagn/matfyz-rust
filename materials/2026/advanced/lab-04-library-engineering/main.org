@@ -1,0 +1,48 @@
+#+TITLE: Advanced Rust 2026 - Lab 4: Library API and Test Strategy
+#+AUTHOR: Lukáš Hozda
+#+DATE: Spring 2026
+
+* Lab Goals
+
+1. Design public APIs with stable contracts.
+2. Build layered tests (unit + integration + regression).
+3. Prepare for homework pair A4.
+
+* Time Plan (90 min)
+
+1. 15 min - API review warm-up
+2. 20 min - exercise 1 (error surface design)
+3. 20 min - exercise 2 (golden-output tests)
+4. 20 min - exercise 3 (property-style checks)
+5. 15 min - review and migration notes
+
+* Exercise 1: Error Surface
+
+Given parser code with `anyhow::Error` leaks, redesign it to:
+
+1. Use domain enum errors.
+2. Preserve useful source context.
+3. Keep caller-facing API concise.
+
+* Exercise 2: Golden Output Contract
+
+Create formatter function and tests using fixed expected text files.
+
+Constraints:
+
+1. Stable ordering.
+2. Exact formatting.
+3. Deterministic behavior independent of hash map iteration.
+
+* Exercise 3: Invariant Checks
+
+Write test helpers asserting invariants:
+
+1. parse + serialize roundtrip stability
+2. stable sort order
+3. clear behavior on empty input
+
+* Debrief
+
+1. Which API choices are semver-sensitive?
+2. Which tests protect against accidental behavioral drift?
