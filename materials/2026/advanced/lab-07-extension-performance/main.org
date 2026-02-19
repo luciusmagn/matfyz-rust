@@ -1,0 +1,46 @@
+#+TITLE: Advanced Rust 2026 - Extension Lab: Performance and Profiling
+#+AUTHOR: Lukáš Hozda
+#+DATE: Spring 2026
+
+* Lab Goals
+
+1. Build a reproducible benchmarking workflow.
+2. Detect cache/contention bottlenecks.
+3. Practice evidence-driven optimization.
+
+* Time Plan (90 min)
+
+1. 20 min - benchmarking setup
+2. 25 min - exercise 1 (algorithmic variant comparison)
+3. 25 min - exercise 2 (contention measurement)
+4. 20 min - exercise 3 (result interpretation)
+
+* Exercise 1: Baseline vs Improved Algorithm
+
+Benchmark two implementations of the same task.
+
+Report:
+
+1. median time
+2. variance
+3. input-size scaling trend
+
+* Exercise 2: Contention Experiment
+
+Measure throughput for shared counter:
+
+1. global mutex
+2. sharded counters + reduction
+3. atomic relaxed counter
+
+Discuss where each approach fails.
+
+* Exercise 3: Result Report
+
+Prepare short report:
+
+1. hypothesis
+2. setup
+3. results
+4. recommendation
+5. residual risks
