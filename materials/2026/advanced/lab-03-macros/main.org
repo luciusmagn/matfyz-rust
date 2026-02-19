@@ -1,0 +1,56 @@
+#+TITLE: Advanced Rust 2026 - Lab 3: Macro Rules in Practice
+#+AUTHOR: Lukáš Hozda
+#+DATE: Spring 2026
+
+* Lab Goals
+
+1. Build robust `macro_rules!` patterns.
+2. Practice diagnostics and fallback arms.
+3. Prepare for homework pair A3.
+
+* Time Plan (90 min)
+
+1. 15 min - recap (`macro_rules!` execution model)
+2. 25 min - exercise 1 (repetition patterns)
+3. 25 min - exercise 2 (command DSL macro)
+4. 15 min - exercise 3 (generated tests)
+5. 10 min - review
+
+* Exercise 1: Repetition Macro
+
+Create macro `vec_of_strings!`:
+
+#+begin_src rust
+let v = vec_of_strings![10, 20, 30];
+assert_eq!(v, vec!["10", "20", "30"]);
+#+end_src
+
+Requirements:
+
+1. Accept comma-separated expressions.
+2. Preserve order.
+3. Trailing comma optional.
+
+* Exercise 2: Mini Command DSL
+
+Create `calc!` macro with supported forms:
+
+1. `calc!(add a, b)`
+2. `calc!(sub a, b)`
+3. `calc!(mul a, b)`
+
+Invalid forms must trigger clear `compile_error!`.
+
+* Exercise 3: Test Case Generator
+
+Write macro that generates repetitive tests from tuples:
+
+#+begin_src rust
+case!(sum_small, [1,2,3], 6);
+#+end_src
+
+* Debrief
+
+1. Where is macro syntax better than function API?
+2. Which diagnostics were easy for users to understand?
+3. What should remain functions, not macros?
