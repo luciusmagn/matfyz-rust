@@ -1,1 +1,2 @@
-# TODO: define input for case 02
+3
+-5 0 10

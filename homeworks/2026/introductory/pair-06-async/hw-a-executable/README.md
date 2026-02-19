@@ -1,21 +1,33 @@
-# I6A Async Processing CLI
+# I6A Async Task Doubler
 
-Course track: Introductory Rust (2026)
-Homework pair: I6
-Type: executable
+Course track: Introductory Rust (2026)  
+Homework pair: I6  
+Type: executable  
 Submission filename: `main.rs`
 
-Goal:
-Implement the executable behavior described in this assignment and produce deterministic stdout for all provided test cases.
+## Task
 
-Testing contract:
+Write a Tokio-based async program that doubles numbers concurrently.
 
-1. Tests are text input/output files in `tests/`.
-2. Input files use `*.in.txt`.
-3. Expected output files use matching `*.out.txt`.
-4. Output comparison is lenient about trailing whitespace and final newline.
+## Input format
 
-Notes:
+1. Line 1: `n` (number of values)
+2. Line 2: exactly `n` signed integers separated by spaces
 
-1. Keep output deterministic.
-2. Do not print extra debug output in final submission.
+## Output format
+
+For each input value at index `i`, print:
+
+```text
+task <i>=<2*value>
+```
+
+Then print:
+
+```text
+sum=<sum_of_all_doubled_values>
+```
+
+Output order must match input index order.
+
+For invalid input print `invalid input`.

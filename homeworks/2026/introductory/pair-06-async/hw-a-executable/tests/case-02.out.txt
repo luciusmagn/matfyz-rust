@@ -1,1 +1,4 @@
-# TODO: define expected output for case 02
+task 0=-10
+task 1=0
+task 2=20
+sum=10

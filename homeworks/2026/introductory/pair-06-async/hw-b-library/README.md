@@ -1,21 +1,22 @@
-# I6B Async Retry/Timeout Utilities
+# I6B Async Helper Library
 
-Course track: Introductory Rust (2026)
-Homework pair: I6
-Type: library
+Course track: Introductory Rust (2026)  
+Homework pair: I6  
+Type: library  
 Submission filename: `solution.rs`
 
-Goal:
-Implement the required library API in `solution.rs` so that test drivers in `tests/test-*.rs` can import and exercise it.
+## Task
 
-Testing contract:
+Implement async helpers in `solution.rs`:
 
-1. Each test driver is a Rust file named `test-XYZ.rs`.
-2. Each test declares `mod solution;`.
-3. Test stdout is compared against `test-XYZ.out.txt`.
-4. Output comparison is lenient about trailing whitespace and final newline.
+```rust
+pub async fn delayed_double(value: i64) -> i64;
+pub async fn async_sum(values: Vec<i64>) -> i64;
+pub fn run_async_sum(values: Vec<i64>) -> i64;
+```
 
-Notes:
+## Behavior contract
 
-1. Keep API behavior deterministic.
-2. Avoid printing from library functions unless assignment explicitly requires it.
+1. `delayed_double` returns `2 * value`.
+2. `async_sum` doubles each value asynchronously and returns sum.
+3. `run_async_sum` runs `async_sum` on a Tokio runtime and returns its result.

@@ -1,6 +1,10 @@
 mod solution;
 
 fn main() {
-    // TODO: call solution API for test-04
-    println!("TODO test-04");
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_time()
+        .build()
+        .unwrap();
+    let v = rt.block_on(solution::async_sum(vec![5, -1, 4]));
+    println!("{v}");
 }

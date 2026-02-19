@@ -1,6 +1,5 @@
 mod solution;
 
 fn main() {
-    // TODO: call solution API for test-03
-    println!("TODO test-03");
+    println!("{}", solution::run_async_sum(vec![]));
 }
