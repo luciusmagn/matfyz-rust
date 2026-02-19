@@ -1,0 +1,15 @@
+#+TITLE: Introductory Rust 2026 - Extension Lab: Performance and Profiling
+#+AUTHOR: Lukáš Hozda
+#+DATE: Winter 2026/27
+
+* Lab Goals
+
+1. Practice reproducible performance measurement.
+2. Compare algorithmic alternatives.
+3. Identify and explain misleading benchmark setups.
+
+* Exercises
+
+1. Benchmark two implementations of the same transform.
+2. Compare allocation-heavy vs buffer-reuse version.
+3. Write short report: hypothesis, results, conclusions.
