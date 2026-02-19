@@ -1,1 +1,9 @@
-# TODO: define input for case 01
+3
+alice:core
+bob:tools
+carol:infra
+4
+bob
+dave
+carol
+alice

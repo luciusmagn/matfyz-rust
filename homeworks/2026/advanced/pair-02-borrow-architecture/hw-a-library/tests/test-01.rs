@@ -1,6 +1,6 @@
 mod solution;
 
 fn main() {
-    // TODO: call solution API for test-01
-    println!("TODO test-01");
+    let fields = solution::split_fields("alpha|beta|gamma", '|');
+    println!("{}", fields.join(","));
 }

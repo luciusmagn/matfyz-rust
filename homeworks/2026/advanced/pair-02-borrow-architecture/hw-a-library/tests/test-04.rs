@@ -1,6 +1,7 @@
 mod solution;
 
 fn main() {
-    // TODO: call solution API for test-04
-    println!("TODO test-04");
+    let fields = solution::split_fields("a,,b,", ',');
+    println!("{}", fields.len());
+    println!("{:?}", solution::longest_field("x|yy|yy", '|'));
 }

@@ -1,6 +1,6 @@
 mod solution;
 
 fn main() {
-    // TODO: call solution API for test-03
-    println!("TODO test-03");
+    let picked = solution::pick_columns("n0;n1;n2;n3", ';', &[3, 0, 7, 2]);
+    println!("{}", picked.join("|"));
 }

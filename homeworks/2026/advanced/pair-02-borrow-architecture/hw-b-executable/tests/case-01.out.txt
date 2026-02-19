@@ -1,1 +1,5 @@
-# TODO: define expected output for case 01
+bob=tools
+dave=<missing>
+carol=infra
+alice=core
+found=3 missing=1

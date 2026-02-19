@@ -1,1 +1,4 @@
-# TODO: define expected output for case 02
+k=v2
+x=<missing>
+k=v2
+found=2 missing=1

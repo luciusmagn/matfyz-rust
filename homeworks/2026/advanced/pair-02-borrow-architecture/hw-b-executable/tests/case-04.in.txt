@@ -1,1 +1,4 @@
-# TODO: define input for case 04
+0
+2
+x
+y
