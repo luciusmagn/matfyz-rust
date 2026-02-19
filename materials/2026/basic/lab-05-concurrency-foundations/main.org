@@ -1,0 +1,15 @@
+#+TITLE: Introductory Rust 2026 - Lab 5: Concurrency Foundations
+#+AUTHOR: Lukáš Hozda
+#+DATE: Winter 2026/27
+
+* Lab Goals
+
+1. Implement thread-based worker processing.
+2. Use channels and mutexes correctly.
+3. Keep observable output deterministic.
+
+* Exercises
+
+1. Parallel sum using thread chunks.
+2. Worker queue with `mpsc` and result aggregation by job ID.
+3. Detect and fix lock-order deadlock in sample code.
