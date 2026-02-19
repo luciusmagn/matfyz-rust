@@ -1,0 +1,15 @@
+#+TITLE: Introductory Rust 2026 - Lab 6: Async with Tokio
+#+AUTHOR: Lukáš Hozda
+#+DATE: Winter 2026/27
+
+* Lab Goals
+
+1. Build and run small async programs with Tokio.
+2. Use async tasks, channels, and timeout handling.
+3. Prepare for homework pair I6.
+
+* Exercises
+
+1. Spawn multiple async workers and gather results.
+2. Add timeout wrapper around simulated async operation.
+3. Implement retry helper with bounded attempts.
