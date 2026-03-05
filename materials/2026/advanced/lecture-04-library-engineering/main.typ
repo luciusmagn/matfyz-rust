@@ -5,7 +5,7 @@
   aspect-ratio: "16-9",
   footer: self => [Advanced Rust 2026 · Lecture 4],
   config-info(
-    title: [Advanced Rust (2026): Library Engineering and Testing],
+    title: [Advanced Rust (2026): Library Engineering, Testing],
     subtitle: [Lecture 4],
     author: [Lukáš Hozda],
     institution: [MFF CUNI],
@@ -15,89 +15,214 @@
 
 #title-slide()
 
-= Library Boundaries
+= Library Contract Design
 
-== Public API Is A Contract
-- Crate internals may change; public behavior must stay stable.
-- Type names, error variants, and semantics are part of the contract.
-- Document invariants, not just syntax.
+== Public API is a Stability Boundary
+- `pub` items define compatibility contract.
+- Internal refactors are free only behind stable behavior.
+- Every exported type/trait/error participates in semver surface.
 
-== Layering Strategy
-- Core logic: deterministic, minimal dependencies.
-- Adapter layer: I/O, environment, serialization.
-- Keep side effects at edges.
+== Layered Architecture
+- Core: pure deterministic domain logic.
+- Adapters: I/O, parsing formats, OS/runtime integration.
+- Facade: ergonomic API over core + adapters.
+
+== Why Deterministic Core Matters
+- Easier tests.
+- Easier benchmarking.
+- Easier cross-platform behavior guarantees.
+
+== Constructor Taxonomy
+- `new`: cheap, obvious, infallible defaults.
+- `try_new`: validation and fallible setup.
+- Builder: many optional knobs and invariants.
 
 ```rust
-pub struct Engine { /* pure core state */ }
-pub struct Runner { /* io adapters */ }
+pub struct Parser {
+    limit: usize,
+}
+
+impl Parser {
+    pub fn new() -> Self { Self { limit: 1024 } }
+    pub fn try_with_limit(limit: usize) -> Result<Self, ConfigError> {
+        if limit == 0 { return Err(ConfigError::ZeroLimit); }
+        Ok(Self { limit })
+    }
+}
 ```
 
-== Error Surface Design
-- Avoid leaking unrelated low-level errors everywhere.
-- Use domain-oriented error enums.
-- Preserve source errors when useful.
+== Error Surface Strategy
+- Domain-level error enum for callers.
+- Preserve source error context where useful.
+- Avoid leaking unrelated third-party error types.
 
 ```rust
 #[derive(Debug)]
-pub enum ParseError {
-    Empty,
-    InvalidNumber(String),
-    Overflow,
+pub enum LoadError {
+    Io(std::io::Error),
+    InvalidHeader,
+    InvalidRecord(usize),
 }
 ```
 
-== Constructor Policy
-- `new` for cheap obvious defaults.
-- `try_new` for validated construction.
-- Builder only when there are many optional knobs.
+== `thiserror`-Style Ergonomics
+- Derive-based error display can reduce boilerplate.
+- Keep variant taxonomy conceptual, not implementation-specific.
+- `From` conversions should not erase meaning.
 
-== Feature Flags
-- Optional dependencies should map to meaningful features.
-- Avoid feature combinations that create incoherent APIs.
-- Document feature interactions explicitly.
+= Trait and Type System Boundaries
 
-== Testing Pyramid
+== Coherence and Orphan Rules
+- Cannot implement foreign trait for foreign type.
+- This shapes extension points for downstream users.
+- Newtype wrappers are the standard escape hatch.
+
+== Newtype Extension Pattern
+```rust
+pub struct Millis(pub u64);
+
+impl std::fmt::Display for Millis {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}ms", self.0)
+    }
+}
+```
+
+== Blanket Impls and Future Breakage
+- Broad impls can block downstream specialization.
+- Adding impl later can become breaking due to coherence conflicts.
+- Be conservative with blanket coverage.
+
+== Trait Object vs Generic API
+- Generics: static dispatch, inlining, larger codegen.
+- Trait objects: dynamic dispatch, stable ABI-like boundary.
+- Pick based on performance + extensibility tradeoff.
+
+== `Send + Sync` in Public Types
+- Thread-safe bounds become part of API contract.
+- Internal non-thread-safe field choice can leak into semver.
+- Decide concurrency model early.
+
+= Versioning and Evolution
+
+== SemVer-Visible Changes
+- Removing public item is breaking.
+- Changing function signature is breaking.
+- Adding enum variant can break exhaustive matches.
+- Tightening trait bounds can break downstream.
+
+== Non-Exhaustive Enums
+- `#[non_exhaustive]` can preserve forward-compatibility.
+- Tradeoff: callers cannot exhaustively match outside crate.
+
+== Deprecation Workflow
+- Deprecate old API path.
+- Offer migration target with examples.
+- Remove only at major version boundary.
+
+== Feature Flag Design
+- Features must compose coherently.
+- Avoid hidden behavior changes by optional dependency toggles.
+- CI should test meaningful feature combinations.
+
+= Testing Strategy
+
+== Test Layers
 - Unit tests for local invariants.
 - Integration tests for public behavior.
-- Property tests for algebraic expectations.
-- Regression tests for known bugs.
+- End-to-end tests for workflow contracts.
+- Regression tests for previously fixed bugs.
 
 == Golden Output Tests
-- Useful for formatter/CLI style libraries.
-- Stable output must be intentional.
-- Keep test fixtures small and reviewable.
-
-== Determinism Under Concurrency
-- Public API should define ordering guarantees.
-- If order is unspecified, say so explicitly.
-- Deterministic tests require deterministic contracts.
-
-== Documentation As Design
-- Rustdoc examples are executable tests.
-- Example failure modes are as important as happy path.
+- Appropriate for formatters/CLI rendering.
+- Keep fixtures small and reviewable.
+- Document formatting contract explicitly.
 
 ```rust
-/// Parses `k=v` lines.
-///
-/// # Errors
-/// Returns `ParseError::InvalidNumber` when value is not integer.
-pub fn parse_pairs(input: &str) -> Result<Vec<(String, i64)>, ParseError> {
-    # unimplemented!()
+#[test]
+fn render_stable() {
+    let out = render_items(&["a", "b"]);
+    assert_eq!(out, "a\nb\n");
 }
 ```
 
-== SemVer Reality
-- Adding enum variant can be breaking for exhaustive matches.
-- Tight trait bounds can unexpectedly break downstream users.
-- Test public API from an external crate perspective.
+== Property Testing
+- Validate algebraic invariants over broad input space.
+- Good for parser/serializer roundtrip laws.
+- Complements, not replaces, example-based tests.
 
-== Benchmarking Protocol
-- Benchmark after correctness is locked.
-- Compare alternatives under representative data.
-- Record compiler version and CPU in benchmark notes.
+== Fuzzing Role
+- Good for parser robustness and panic discovery.
+- Add corpus from real incidents when possible.
+- Track crashes as regression tests.
 
-== Library Review Checklist
-- Contract clear?
-- Error types useful?
-- Tests cover edge behavior?
-- Docs reflect real invariants?
+== Determinism Under Parallelism
+- Public API should state ordering guarantees.
+- If non-deterministic, API must document it explicitly.
+- Tests should verify exactly promised determinism level.
+
+== Time and Flakiness
+- Avoid wall-clock assertions when possible.
+- Use deterministic schedulers/mocks where practical.
+- CI flake budget should be effectively zero.
+
+= Documentation as Engineering Artifact
+
+== Rustdoc Contract Sections
+- `# Panics`
+- `# Errors`
+- `# Safety` (for unsafe-related APIs)
+- `# Examples` with realistic usage
+
+== Executable Examples
+- Doc examples are tests.
+- Keep examples minimal but semantically complete.
+- Include one failure-mode example where useful.
+
+== Invariant Documentation
+- Types should state representation invariants.
+- Methods should state preconditions and postconditions.
+- This reduces ambiguous bug reports.
+
+= Practical Case Study
+
+== Case: Parser + Renderer Crate
+- Core parse model independent from input source.
+- Renderer independent from parse source.
+- IO wrappers at edge.
+
+```rust
+pub fn parse(input: &str) -> Result<Model, ParseError> { /* ... */ # unimplemented!() }
+pub fn render(model: &Model) -> String { /* ... */ # unimplemented!() }
+pub fn load_from_path(path: &std::path::Path) -> Result<Model, LoadError> { /* ... */ # unimplemented!() }
+```
+
+== Case: Async API Choice
+- Provide sync core + async wrappers when feasible.
+- Avoid forcing runtime choice into core semantics.
+- Feature-gate runtime integrations explicitly.
+
+== Case: Iterator-Oriented API
+- Returning iterator avoids forced allocation.
+- If stability of iteration order matters, define it.
+- Expose owned collection only when required.
+
+= Review Rubric
+
+== API Review Questions
+- What is stable contract here?
+- What can change without major version bump?
+- Is error taxonomy domain-based?
+- Are trait bounds minimal and justified?
+
+== Test Review Questions
+- Which invariants are untested?
+- Are regressions encoded as tests?
+- Are nondeterministic elements controlled?
+- Is failure output diagnostic enough?
+
+== Final Rules
+- Contract clarity beats clever type tricks.
+- Core determinism first, adapters second.
+- Test design is part of API design.
+- If migration story is unclear, API is not ready.
