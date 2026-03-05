@@ -15,72 +15,228 @@
 
 #title-slide()
 
-= Systems Thinking
+= Systems Boundary Model
 
-== Scope Of Systems Rust
-- OS interaction: files, processes, sockets, signals.
-- Data representation across boundaries.
-- Failure-aware control flow.
+== What "Systems Programming" Means Here
+- Explicit ownership of OS resources.
+- Explicit failure policy for each boundary.
+- Explicit concurrency and shutdown semantics.
+- No hidden magic in runtime behavior.
 
-== Error Mapping
-- Preserve context when crossing layers.
-- Convert low-level errors to domain-level meanings.
+== Boundary Layers
+- Pure domain layer.
+- Resource abstraction layer (files, sockets, processes).
+- Adapter/CLI/service layer.
+- Each layer narrows error vocabulary.
+
+== Resource Lifetime = Safety + Reliability
+- FD leak is both correctness and ops issue.
+- RAII + Drop provide default cleanup path.
+- Explicit handoff required for cross-boundary ownership transfer.
+
+= File and Descriptor Semantics
+
+== `File` Ownership
+- `File` owns descriptor and closes in Drop.
+- `AsRawFd` borrows descriptor.
+- `IntoRawFd` transfers ownership out.
 
 ```rust
-fn read_config(path: &std::path::Path) -> Result<String, String> {
-    std::fs::read_to_string(path)
-        .map_err(|e| format!("cannot read {}: {e}", path.display()))
+use std::fs::File;
+use std::os::fd::{AsRawFd, IntoRawFd};
+
+let f = File::open("/etc/hosts").unwrap();
+let borrowed = f.as_raw_fd();
+println!("borrowed fd = {borrowed}");
+```
+==
+```rust
+let f2 = File::open("/etc/hosts").unwrap();
+let owned_fd = f2.into_raw_fd();
+println!("owned fd = {owned_fd}");
+```
+
+== Buffered vs Unbuffered I/O
+- Syscalls are expensive.
+- Buffering strategy changes throughput and latency.
+- Flush policy is part of protocol correctness.
+
+```rust
+use std::io::{BufRead, BufReader};
+
+let f = std::fs::File::open("data.txt").unwrap();
+let r = BufReader::new(f);
+for line in r.lines() {
+    println!("{}", line.unwrap());
 }
 ```
 
-== File Descriptors And Ownership
-- `File` owns descriptor and closes on drop.
-- `AsRawFd` borrows descriptor.
-- `IntoRawFd` transfers ownership explicitly.
+== Memory-Mapped I/O Tradeoff
+- Can reduce copy overhead.
+- Introduces lifetime/consistency subtleties.
+- File mutation/truncation hazards become correctness concerns.
 
-== Process Pipelines
-- Build commands as data.
-- Capture stdout/stderr separately.
-- Define timeout and failure policy.
+= Process and Command Interfaces
+
+== Process Execution Contract
+- Command line construction must be explicit.
+- Exit status and stderr are first-class outputs.
+- Timeout and cancellation policy must be defined.
 
 ```rust
-let output = std::process::Command::new("rustc")
+use std::process::Command;
+
+let out = Command::new("rustc")
     .arg("--version")
     .output()
-    .expect("failed to execute rustc");
-println!("{}", String::from_utf8_lossy(&output.stdout));
+    .expect("spawn failed");
+println!("status: {}", out.status);
 ```
 
-== Buffered I/O
-- Syscalls are expensive.
-- `BufRead` / `BufWriter` reduce overhead.
-- Flush strategy is part of correctness for interactive tools.
+== Pipeline Ownership Rules
+- Parent owns child handles unless transferred.
+- Read all pipes or risk deadlock on full buffers.
+- Avoid shell-string concatenation, pass args structurally.
 
-== Binary Layout Concerns
-- `repr(C)` only when ABI compatibility is required.
-- Endianness and alignment must be explicit in protocols.
+== Exit Status Mapping
+- OS status codes are transport-level facts.
+- Domain API should map them to semantic failures.
+- Preserve raw status for diagnostics.
 
-== Time And Clocks
-- Monotonic clock for intervals/timeouts.
+= Networking and Async Runtime Boundaries
+
+== Blocking vs Async Socket Paths
+- Blocking APIs simpler but thread-heavy at scale.
+- Async APIs shift complexity to runtime and cancellation semantics.
+- Choose model based on workload shape.
+
+== Reactor Concept
+- OS readiness events feed user tasks.
+- Task is polled when IO likely to progress.
+- Readiness is hint, not completion guarantee.
+
+== Backpressure
+- Producer faster than consumer must be controlled.
+- Queue bounds are correctness knobs, not just performance knobs.
+- Unbounded channels can become memory failure mode.
+
+```rust
+use tokio::sync::mpsc;
+
+let (tx, mut rx) = mpsc::channel::<i64>(128);
+```
+
+== Cancellation Semantics
+- Dropping future does not roll back external effects.
+- API should define cancellation safety explicitly.
+- Idempotent operations simplify restart/retry logic.
+
+= Data Representation Boundaries
+
+== Binary Layout Discipline
+- `repr(C)` for C interoperability.
+- Endianness must be explicit in protocol design.
+- Avoid transmute-based parsing of untrusted input.
+
+== Serialization Contracts
+- Version fields should be explicit.
+- Unknown fields policy (ignore/fail) must be defined.
+- Deterministic encoding aids reproducibility tests.
+
+== Zero-Copy Parsing Tradeoff
+- Saves allocations.
+- Increases lifetime coupling and borrow complexity.
+- Good for hot paths with stable buffer ownership.
+
+= Error Architecture
+
+== Error Layering
+- Low-level: OS / libc / transport details.
+- Mid-level: adapter context and retries.
+- High-level: domain failure semantics.
+
+== Context Preservation
+- Include operation + target in errors.
+- Preserve source chain where useful.
+- Keep displayed message concise but specific.
+
+```rust
+fn read_cfg(path: &std::path::Path) -> Result<String, String> {
+    std::fs::read_to_string(path)
+        .map_err(|e| format!("read {} failed: {e}", path.display()))
+}
+```
+
+== Retry Policy
+- Retry only transient failures.
+- Bound retry count and delay strategy.
+- Add jitter in distributed systems contexts.
+
+= Time, Signals, Shutdown
+
+== Clock Semantics
+- Monotonic clock for durations/timeouts.
 - Wall clock for user-facing timestamps.
-- Never mix semantics accidentally.
+- Never mix these concepts in timeout logic.
 
-== Signal And Shutdown Strategy
-- Cancellation path should preserve invariants.
-- Graceful shutdown is design, not add-on.
-- Keep shutdown idempotent.
+== Signal Handling Contract
+- Signal callback context is constrained.
+- Often best to flip atomic flag and handle in main loop.
+- Shutdown path must be idempotent.
 
-== Resource Lifetime Design
-- RAII for cleanup.
-- Explicit ownership transfer at boundaries.
-- Avoid hidden global state.
+== Graceful Shutdown Sequence
+- Stop accepting new work.
+- Drain inflight tasks with deadline.
+- Persist final state.
+- Close resources in deterministic order.
 
-== Observability
-- Structured logs over ad-hoc prints.
-- Include correlation ids in concurrent tools.
-- Capture enough context for post-mortem analysis.
+= Case Studies
 
-== Practical Rule
-- Prefer straightforward design + clear invariants.
-- Optimize only after measurement.
-- Systems code quality = correctness + diagnosability.
+== Case: Deterministic Log Processor
+- Stable parse rules.
+- Stable output ordering.
+- Explicit malformed-input policy.
+- Resource usage bounded by streaming strategy.
+
+== Case: Command Runner Library
+- Typed command specification.
+- Captured stdout/stderr.
+- Timeout support.
+- Domain-mapped exit failures.
+
+```rust
+struct RunResult {
+    status: i32,
+    stdout: String,
+    stderr: String,
+}
+```
+
+== Case: File Watcher Service
+- Event coalescing policy matters.
+- Debounce window affects correctness and latency.
+- Shutdown race handling required.
+
+= Verification and Operations
+
+== Systems Test Matrix
+- Linux/macOS differences.
+- Different filesystem semantics.
+- Slow disk and high-latency network simulation.
+- Resource exhaustion paths.
+
+== Observability by Design
+- Structured logs with request/task IDs.
+- Metrics: queue depth, error class counts, latency percentiles.
+- Trace boundaries around OS interaction points.
+
+== Benchmarks with Realistic Workload
+- Synthetic microbenchmarks are necessary but insufficient.
+- Include end-to-end benchmark with realistic data shape.
+- Track variance and tail latency, not only mean.
+
+== Final Rules
+- Define boundary contracts before implementation details.
+- Treat shutdown and failure as primary flows.
+- Prefer explicit ownership/resource handoff.
+- If ops behavior is unclear, API is incomplete.
