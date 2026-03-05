@@ -5,7 +5,7 @@
   aspect-ratio: "16-9",
   footer: self => [Advanced Rust 2026 · Lecture 5],
   config-info(
-    title: [Advanced Rust (2026): Unsafe Boundaries and Soundness],
+    title: [Advanced Rust (2026): Unsafe Rust, Soundness Boundaries],
     subtitle: [Lecture 5],
     author: [Lukáš Hozda],
     institution: [MFF CUNI],
@@ -15,78 +15,215 @@
 
 #title-slide()
 
-= Unsafe Model
+= Unsafe Contract
 
-== What `unsafe` Means
-- `unsafe` does not disable compiler checks globally.
-- It allows specific operations requiring extra invariants.
-- Soundness is now your obligation.
+== What `unsafe` Actually Means
+- `unsafe` does not disable borrow checker globally.
+- It permits specific operations that require manual proof.
+- All UB-prevention obligations move to you.
 
-== The Five Unsafe Capabilities
-- Dereference raw pointers.
-- Call unsafe functions.
-- Access/modify mutable statics.
-- Implement unsafe traits.
-- Access union fields.
+== Five Unsafe Capabilities
+- Dereference raw pointer.
+- Call unsafe function.
+- Access/modify mutable static.
+- Implement unsafe trait.
+- Access union field.
 
-== Invariant-First Design
-- Write invariants before code.
-- `unsafe` block should be tiny and auditable.
-- Safe wrapper should enforce preconditions.
+== Soundness Boundary Pattern
+- Keep unsafe blocks tiny.
+- State invariants in comments/docs near unsafe block.
+- Expose safe API that enforces invariants.
 
-== Raw Pointer Example
+== UB Is Global Contract Violation
+- UB is not a normal runtime failure.
+- Compiler may assume UB never happens and optimize accordingly.
+- A single UB site can invalidate unrelated code assumptions.
+
+= Raw Memory Primitives
+
+== Raw Pointers
+- `*const T` and `*mut T` are not references.
+- No aliasing/lifetime guarantees by type alone.
+- Dereference requires `unsafe`.
+
 ```rust
-fn read_first(ptr: *const i64, len: usize) -> Option<i64> {
-    if ptr.is_null() || len == 0 {
-        return None;
-    }
-    unsafe { Some(*ptr) }
+let x = 10_i64;
+let p: *const i64 = &x;
+unsafe {
+    println!("{}", *p);
 }
 ```
 
-== `slice::from_raw_parts`
-- Requires valid pointer + length.
-- Memory must be initialized and immutable for lifetime.
-- Aliasing and lifetime mistakes become UB.
+== `NonNull<T>`
+- Encodes non-null guarantee.
+- Still does not encode aliasing or lifetime correctness.
+- Useful in collection internals.
 
 ```rust
-fn as_slice<'a>(ptr: *const u8, len: usize) -> &'a [u8] {
-    unsafe { std::slice::from_raw_parts(ptr, len) }
-}
+use std::ptr::NonNull;
+
+let mut x = 5_i32;
+let p = NonNull::from(&mut x);
 ```
 
 == `MaybeUninit<T>`
-- Correct tool for partially initialized buffers.
-- Avoid uninitialized reads.
-- Convert to initialized type only after full init.
+- Correct tool for uninitialized storage.
+- Prevents accidental reads of uninitialized memory.
+- Use `assume_init` only after full initialization proof.
 
-== `NonNull<T>`
-- Non-null raw pointer wrapper.
-- Useful in custom collections.
-- Does not prove aliasing or lifetime correctness.
+```rust
+use std::mem::MaybeUninit;
 
-== Unsafe Trait Contracts
-- `Send` / `Sync` manual impls are high-risk.
-- Must reason about all reachable state.
-- One wrong impl can invalidate whole crate safety.
+let mut slot = MaybeUninit::<i64>::uninit();
+slot.write(42);
+let v = unsafe { slot.assume_init() };
+println!("{v}");
+```
 
-== FFI Boundaries
-- `extern "C"` defines ABI contract.
-- Layout compatibility and ownership transfer rules must be explicit.
+== `ManuallyDrop<T>`
+- Disables automatic drop.
+- Useful in custom ownership transitions.
+- Easy source of double-drop if misused.
 
-== UB Is Not A Panic
-- UB can look correct during tests.
-- UB invalidates optimizer assumptions globally.
-- “Works on my machine” is not evidence.
+= Aliasing and Provenance
 
-== Review Workflow
-- For every unsafe block:
-  - state required invariants
-  - state why they hold
-  - state how caller can break them
-- Add targeted tests for boundary behavior.
+== Reference Rules Still Matter
+- Creating `&mut T` asserts unique mutable access.
+- Violating that assertion is UB even if code "seems to work".
+- Unsafe code must respect high-level reference semantics.
 
-== Strategy
-- Keep unsafe core minimal.
-- Expose safe, narrow API.
-- Move complexity to compile-time checks where possible.
+== `UnsafeCell<T>`
+- Only legal way to opt out of shared-reference immutability.
+- Foundation for `Cell`, `RefCell`, atomics, mutex internals.
+- Does not solve synchronization by itself.
+
+```rust
+use std::cell::UnsafeCell;
+
+struct MyCell<T> {
+    inner: UnsafeCell<T>,
+}
+```
+
+== Pointer Provenance Intuition
+- Pointer is not just integer address.
+- It carries origin/allocation relation constraints.
+- Integer round-tripping can violate provenance assumptions.
+
+== Stacked-Borrows-Like Reasoning
+- Think in terms of active borrow stack permissions.
+- Creating new mutable reference may invalidate old aliases.
+- Miri can help catch many violations experimentally.
+
+= Drop and Layout Edges
+
+== Drop Check (dropck)
+- Drop order influences lifetime validity.
+- Generic types with destructors need careful lifetime constraints.
+- Hidden borrow in Drop can cause surprising compile failures.
+
+== `repr(C)` and ABI
+- `repr(C)` for C ABI/layout compatibility.
+- `repr(Rust)` field order/layout is not stable ABI.
+- `repr(transparent)` for wrapper ABI compatibility.
+
+== Unions
+- Union field access is unsafe because active variant is unchecked.
+- You must track which field is valid by external invariant.
+
+```rust
+union U {
+    i: u32,
+    f: f32,
+}
+```
+
+== Padding and Uninitialized Bytes
+- Reading padding bytes is UB-sensitive territory in some contexts.
+- Avoid bytewise assumptions about arbitrary `T` layout.
+- Prefer explicit serialization logic.
+
+= Unsafe Traits
+
+== Why `Send`/`Sync` Can Be Unsafe to Implement
+- Incorrect impl can break thread-safety guarantees globally.
+- Must reason about all reachable interior state.
+- Often safer to compose existing thread-safe primitives.
+
+== Typical Unsafe Trait Checklist
+- Aliasing model documented?
+- Interior mutation synchronized?
+- Drop path race-free?
+- FFI callbacks thread constraints enforced?
+
+= FFI Boundaries
+
+== `extern "C"` Contracts
+- ABI and calling convention must match exactly.
+- Ownership transfer rules must be explicit on both sides.
+- Panics must not unwind across non-Rust boundaries.
+
+```rust
+extern "C" {
+    fn strlen(s: *const core::ffi::c_char) -> usize;
+}
+```
+
+== Nullability and Ownership in FFI
+- Use `*mut T` / `*const T` for nullable pointers.
+- Convert to references only after checks.
+- Clearly define who allocates and who frees.
+
+== FFI Error Mapping
+- C APIs often use sentinel values / errno.
+- Wrap low-level protocol into Rust `Result` surface.
+- Keep unsafe at boundary adapter layer.
+
+= Case Studies
+
+== Case: Safe Slice from Pointer
+- Preconditions: non-null for non-empty, valid allocation, initialized elements.
+- Lifetime must not outlive allocation.
+- API should force caller to acknowledge preconditions.
+
+```rust
+unsafe fn view<'a>(ptr: *const u8, len: usize) -> &'a [u8] {
+    std::slice::from_raw_parts(ptr, len)
+}
+```
+
+== Case: Bounded Buffer Wrapper
+- Internal storage may use unsafe indexing for speed.
+- Public methods must enforce bounds/invariants.
+- Unit tests must target boundary transitions aggressively.
+
+== Case: Lock-Free Node Reclamation
+- ABA and reclamation become central correctness issue.
+- Ownership alone does not solve reclamation races.
+- Epoch/hazard strategies are required in practice.
+
+= Verification Workflow
+
+== Unsafe Code Review Template
+- Invariant list.
+- Why invariant holds at this point.
+- What could invalidate invariant.
+- Which tests/benchmarks cover boundary.
+
+== Dynamic Tools
+- Miri for aliasing and UB classes.
+- Sanitizers for memory/thread issues in compatible builds.
+- Fuzzers for boundary API misuse paths.
+
+== Documentation Requirements
+- `# Safety` section for every unsafe fn.
+- State caller obligations in precise terms.
+- Include minimal valid and invalid usage examples.
+
+= Final Rules
+
+== Engineering Rules
+- Unsafe core should be minimal and local.
+- Safe wrapper must encode invariants by API shape.
+- Do not rely on "works in tests" as proof.
+- If invariant proof is unclear, redesign before shipping.
