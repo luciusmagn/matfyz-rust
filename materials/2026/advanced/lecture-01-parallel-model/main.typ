@@ -35,7 +35,9 @@ use std::thread;
 let data = vec![10, 20, 30, 40];
 let idx = Arc::new(AtomicUsize::new(0));
 let idx2 = Arc::clone(&idx);
-
+```
+==
+```rust
 thread::spawn(move || idx2.store(99, Ordering::SeqCst));
 
 if let Some(value) = data.get(idx.load(Ordering::SeqCst)) {
@@ -57,7 +59,9 @@ use std::thread;
 let data = vec![10, 20, 30, 40];
 let idx = Arc::new(AtomicUsize::new(0));
 let idx2 = Arc::clone(&idx);
-
+```
+==
+```rust
 thread::spawn(move || idx2.store(99, Ordering::SeqCst));
 
 if idx.load(Ordering::SeqCst) < data.len() {
@@ -182,7 +186,9 @@ use std::thread;
 let state = Arc::new(RwLock::new(vec![10, 20, 30]));
 let s1 = Arc::clone(&state);
 let s2 = Arc::clone(&state);
-
+```
+==
+```rust
 let r1 = thread::spawn(move || s1.read().unwrap().iter().sum::<i32>());
 let r2 = thread::spawn(move || s2.read().unwrap().iter().sum::<i32>());
 
@@ -200,7 +206,9 @@ use std::thread;
 
 let shared = Arc::new((Mutex::new(false), Condvar::new()));
 let shared2 = Arc::clone(&shared);
-
+```
+==
+```rust
 thread::spawn(move || {
     let (lock, cv) = &*shared2;
     *lock.lock().unwrap() = true;
@@ -224,7 +232,9 @@ use std::thread;
 
 let a = Arc::new(Mutex::new(0));
 let b = Arc::new(Mutex::new(0));
-
+```
+==
+```rust
 let (a1, b1) = (Arc::clone(&a), Arc::clone(&b));
 let _t1 = thread::spawn(move || {
     let _ga = a1.lock().unwrap();
@@ -248,7 +258,7 @@ let _t2 = thread::spawn(move || {
 
 == C++20 Memory Model Inheritance
 - Rust atomics follow the C++20 model.
-- Core relation is happens-before (\"A must be visible before B\").
+- Core relation is happens-before ("A must be visible before B").
 - Reasoning is graph-like: operations are nodes, ordering rules are edges.
 - Hardware and compiler optimizations must obey this model.
 
@@ -307,7 +317,7 @@ println!("{seen}");
 == Release/Acquire Publication
 - Release publishes prior writes.
 - Acquire on the same atomic, when it sees that release, makes those writes visible.
-- Direction mnemonic: release keeps \"before\" before; acquire keeps \"after\" after.
+- Direction mnemonic: release keeps "before" before; acquire keeps "after" after.
 
 ```rust
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
@@ -375,7 +385,7 @@ fence(Ordering::SeqCst);
 == Atomic TOCTOU
 - Two loads are two observations.
 - Second read may disagree with first.
-- Think \"two photos taken at different moments\".
+- Think "two photos taken at different moments".
 
 ```rust
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -399,7 +409,7 @@ if idx.load(Ordering::Relaxed) < values.len() {
 
 == Linearizability
 - Layman: behavior looks as if operations happened one-by-one in some order.
-- Each operation has a single conceptual \"instant\" where it takes effect.
+- Each operation has a single conceptual "instant" where it takes effect.
 - This is the usual target for concurrent maps, queues, stacks.
 - In Rust lock-based APIs are often linearizable by design; lock-free structures need explicit proof.
 
@@ -436,7 +446,7 @@ r2 = x.load(Ordering::Relaxed);
 == Load Buffering (LB)
 - Reads may happen before writes become visible globally.
 - Architecture and ordering level determine allowed outcomes.
-- This example demonstrates why \"looks obvious\" is not a proof in concurrent code.
+- This example demonstrates why "looks obvious" is not a proof in concurrent code.
 
 ```rust
 // Thread 1
@@ -448,7 +458,7 @@ r2 = x.load(Ordering::Relaxed);
 y.store(1, Ordering::Relaxed);
 ```
 
-= Lock-Free Pitfalls
+= Lock-Free Issues
 
 == ABA Problem
 - Compare-exchange only checks current value equality.
