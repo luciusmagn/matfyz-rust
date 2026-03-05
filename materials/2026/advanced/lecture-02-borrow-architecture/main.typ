@@ -5,7 +5,7 @@
   aspect-ratio: "16-9",
   footer: self => [Advanced Rust 2026 · Lecture 2],
   config-info(
-    title: [Advanced Rust (2026): Borrow Checker, API Architecture],
+    title: [Advanced Rust (2026): Borrow Checker, Lifetimes, Variance],
     subtitle: [Lecture 2],
     author: [Lukáš Hozda],
     institution: [MFF CUNI],
@@ -15,284 +15,326 @@
 
 #title-slide()
 
-= Core Model
+= Ownership and References
 
-== Ownership as Capability
-- Think of ownership as a unique capability to mutate and eventually drop.
-- Shared borrows temporarily split read capability from owner.
-- Mutable borrows temporarily transfer exclusive capability.
-- Compiler checks capability discipline statically.
+== Ownership: Core Invariant
+- Every value has exactly one owner.
+- Value is dropped when owner goes out of scope.
+- Ownership can be moved.
+- Borrowing is temporary non-owning access.
 
-== Aliasing XOR Mutability
-- You can have aliasing (`&T`) or mutation (`&mut T`).
-- You cannot have both at the same time for the same location.
-- This rule is the source of many API-shape decisions.
+== Reference Kinds
+- Shared reference: `&T`
+  - multiple aliases allowed
+  - no mutation through this reference
+- Mutable reference: `&mut T`
+  - unique access requirement
+  - mutation allowed
 
-== Region Inference
-- Lifetimes are inferred regions, not runtime counters.
-- Borrow checker reasons over control-flow graph.
-- Each reference must remain valid over its whole use region.
+== Two Fundamental Rules
+- A reference cannot outlive its referent.
+- A mutable reference cannot be aliased.
+- These constraints prevent use-after-free and data races.
+
+== Returning Reference to Temporary
+```rust
+fn as_str(data: &u32) -> &str {
+    let s = format!("{}", data);
+    // invalid: s is dropped at function end
+    &s
+}
+```
+- Borrow checker rejects this at compile time.
+
+== Aliasing + Reallocation Hazard
+```rust
+let mut data = vec![1, 2, 3];
+let x = &data[0];
+
+data.push(4); // may reallocate
+println!("{}", x);
+```
+- Borrow checker prevents potential dangling reference.
+
+= Borrow Checker Analysis
+
+== What Borrow Checker Does
+- Tracks ownership and borrow states across control flow.
+- Validates lifetime and aliasing constraints.
+- Rejects programs with potential memory-unsafe executions.
+- Cost is compile-time only.
+
+== Simplified Analysis Pipeline
+- Build control-flow graph.
+- Propagate borrow state facts per program point.
+- Check aliasing and lifetime constraints.
+- Emit diagnostics at violating points.
 
 == NLL (Non-Lexical Lifetimes)
-- Lifetimes end at last use, not always at block end.
-- NLL reduces false conflicts.
-- It still does not permit alias + mutation violations.
+- Lifetime ends at last use, not always block end.
+- Reduces unnecessary borrow conflicts.
+- Does not relax soundness constraints.
 
 ```rust
 let mut v = vec![1, 2, 3];
 let first = &v[0];
-println!("{first}"); // last use of first
-v.push(4);           // allowed with NLL
+println!("{first}");
+
+v.push(4); // allowed after last use of first
 ```
 
-== Reborrowing
-- Borrowing from a borrow creates a derived borrow.
-- Parent borrow is restricted while child borrow is active.
-- This is common with method chaining and iterators.
+== Reborrowing Model
+- Borrow from borrow creates derived permission.
+- Parent borrow is restricted while derived borrow is active.
 
 ```rust
 let mut x = 10;
-let a: &mut i32 = &mut x;
-let b: &mut i32 = &mut *a;
+let a = &mut x;
+let b = &mut *a;
+
 *b += 1;
 *a += 2;
 ```
 
-== Two-Phase Borrows
-- Method receiver `&mut self` may use two-phase borrowing.
-- Reservation happens before argument evaluation.
-- Activation happens at call site.
-- Explains why some seemingly conflicting calls compile.
+== Two-Phase Borrow Example
+- First phase: reservation.
+- Second phase: activation.
+- Enables patterns like method call with shared-then-mutable access.
 
 ```rust
 let mut v = vec![1, 2, 3];
-v.push(v.len()); // accepted via two-phase borrow rules
+v.push(v.len());
 ```
 
-== Borrow Splitting in Structs
-- Distinct fields can be borrowed independently.
-- Field-level disjointness is tracked.
+= Lifetimes
 
+== Lifetime Meaning
+- Lifetime is a region where reference is valid.
+- Lifetimes are compile-time reasoning artifacts.
+- They express relationship constraints in signatures.
+
+== Explicit Lifetime Coupling
 ```rust
-struct Pair { left: i64, right: i64 }
-
-let mut p = Pair { left: 1, right: 2 };
-let a = &mut p.left;
-let b = &mut p.right;
-*a += 10;
-*b += 20;
+fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
+    if x.len() > y.len() { x } else { y }
+}
 ```
+- Output lifetime is constrained by both inputs.
 
-== Borrow Splitting in Slices
-- Compiler cannot infer disjointness from two indexes alone.
-- Use API that encodes disjointness explicitly.
-
+== Lifetime Elision (Desugaring Idea)
 ```rust
-let mut xs = [1, 2, 3, 4];
-let (a, b) = xs.split_at_mut(2);
-a[0] += 10;
-b[0] += 20;
+fn first_word(s: &str) -> &str {
+    s.split_whitespace().next().unwrap_or("")
+}
 ```
-
-== Temporary Values and Dangling
-- Returning reference to temporary is rejected.
-- Borrow must outlive returned reference.
-
+==
 ```rust
-// fn bad() -> &str {
-//     let s = String::from("x");
-//     &s
-// }
-```
-
-= Lifetimes in APIs
-
-== Elision Rules
-- One input reference -> output may elide to it.
-- Methods with `&self` often elide output to `self`.
-- Multiple candidates require explicit lifetimes.
-
-```rust
-fn head(s: &str) -> &str {
+fn first_word<'a>(s: &'a str) -> &'a str {
     s.split_whitespace().next().unwrap_or("")
 }
 ```
 
-== Explicit Lifetime Coupling
-- Explicit lifetimes declare coupling between inputs and outputs.
-- They do not extend object lifetime.
+== Elision Rules (Practical)
+- Each input reference gets its own lifetime.
+- If exactly one input lifetime exists, output may elide to it.
+- For methods, `&self` lifetime can be used for output.
+- Otherwise explicit output lifetime needed.
 
+== Unbounded Lifetime in Unsafe
 ```rust
-fn pick<'a>(a: &'a str, b: &'a str, choose_a: bool) -> &'a str {
-    if choose_a { a } else { b }
+fn get_str<'a>(ptr: *const String) -> &'a str {
+    unsafe { &*ptr }
 }
 ```
+- This can manufacture overly-permissive lifetimes.
+- Unsafe boundaries must rebind lifetime constraints immediately.
 
-== HRTB (Higher-Ranked Trait Bounds)
-- Needed when closure/function must work for any lifetime.
-- Common in callback-heavy APIs and adapters.
+== `'static` Distinction
+- `&'static T`: referent valid for program duration.
+- `T: 'static`: type has no non-static reference dependency.
+- These are related but not identical concepts.
+
+= Subtyping and Variance
+
+== Lifetime Subtyping
+- If `'long` fully contains `'short`, then `'long <: 'short`.
+- Longer-lived reference can be used where shorter is expected.
 
 ```rust
-fn apply_for_all<F>(f: F)
-where
-    F: for<'a> Fn(&'a str) -> usize,
+let hello: &'static str = "hello";
 {
-    let _ = f("abc");
-    let s = String::from("longer");
-    let _ = f(&s);
+    let local = String::from("x");
+    let short = &local;
+    dbg!(hello, short);
 }
 ```
 
-== Variance Overview
-- `&'a T` is covariant in `'a` and `T`.
-- `&'a mut T` is covariant in `'a`, invariant in `T`.
-- Invariance often blocks intuitive subtype substitutions.
+== Variance Definitions
+- Covariant: subtyping preserved.
+- Contravariant: subtyping reversed.
+- Invariant: no subtyping relationship propagated.
 
-== Why Invariance Matters
-- If `&mut T` were covariant in `T`, type safety breaks.
-- Invariance prevents writing wrong subtype through mutable ref.
-- This appears in generic container API design.
+== Common Variance Cases
+- `&'a T`: covariant in `'a`, covariant in `T`.
+- `&'a mut T`: covariant in `'a`, invariant in `T`.
+- `Vec<T>`: covariant in `T`.
+- `Cell<T>`: invariant in `T`.
+- `fn(T) -> U`: contravariant in `T`, covariant in `U`.
 
-== `impl Iterator + '_`
-- Expresses borrowed iterator tied to receiver lifetime.
-- Avoids explicit named lifetime in many cases.
-
+== Why `&mut T` is Invariant
 ```rust
-struct Bag { xs: Vec<i64> }
+fn assign<T>(input: &mut T, val: T) {
+    *input = val;
+}
 
-impl Bag {
-    fn evens(&self) -> impl Iterator<Item = i64> + '_ {
-        self.xs.iter().copied().filter(|x| x % 2 == 0)
-    }
+let mut hello: &'static str = "hello";
+```
+==
+```rust
+{
+    let world = String::from("world");
+    // if &mut were covariant in T, this would be unsound
+    // assign(&mut hello, &world);
+}
+println!("{hello}");
+```
+- Invariance prevents storing short-lived refs into long-lived slots.
+
+== Contravariance in Function Arguments
+```rust
+fn store(input: &'static str) {
+    let _ = input;
+}
+
+fn demo<'a>(input: &'a str, f: fn(&'a str)) {
+    f(input);
 }
 ```
+==
+```rust
+fn main() {
+    let local = String::from("local");
+    // demo(&local, store); // rejected
+}
+```
+- Function accepting only `'static` cannot stand in for one accepting any `'a`.
 
-= Design Patterns
+= Borrow Splitting and Iteration
+
+== Field-Level Borrow Splitting
+```rust
+struct Point { x: i32, y: i32 }
+
+let mut p = Point { x: 0, y: 0 };
+let x = &mut p.x;
+let y = &mut p.y;
+*x += 10;
+*y += 20;
+```
+- Borrow checker understands disjoint struct fields.
+
+== Container Splitting Limits
+```rust
+let mut arr = [1, 2, 3];
+let a = &mut arr[0];
+let b = &mut arr[1]; // rejected
+```
+- Index expressions do not automatically prove disjointness.
+
+== Explicit Disjointness via API
+```rust
+let mut arr = [1, 2, 3, 4, 5];
+let (left, right) = arr.split_at_mut(2);
+left[0] += 10;
+right[0] += 20;
+```
+
+== Mutable Iterator Subtlety
+- `Iterator::next(&mut self)` can yield `&mut` items safely.
+- Safety relies on one-shot consumption guarantee.
+- Iterator implementation must ensure no aliasing of yielded refs.
+
+= Stacked Borrows Perspective
+
+== Why This Model Matters
+- Gives formal aliasing interpretation for unsafe code reasoning.
+- Clarifies when pointer/reference accesses are permitted.
+- Helps explain Miri diagnostics.
+
+== Permission Stack Intuition
+- Memory location tracks permission stack.
+- New mutable borrow pushes exclusive permission.
+- Certain accesses invalidate older permissions.
+
+== Example of Invalidation
+```rust
+let mut x = 10;
+let r1 = &mut x;
+*r1 = 20;
+
+let r2 = &*r1;
+println!("{}", *r2);
+```
+==
+```rust
+*r1 = 30;
+// Using r2 after this may violate stacked-borrows rules
+```
+
+== Miri as Practical Tool
+- Executes MIR with UB checks including aliasing classes.
+- Not complete formal verifier, but very useful detector.
+- Especially valuable for unsafe abstraction testing.
+
+= API Architecture with Borrow Checker
 
 == Owner/View Split
-- Store owns memory (`Vec`, `String`, `Box`).
-- View structs borrow from owner.
-- Keeps allocation policy separate from traversal/query APIs.
+- Owner struct keeps allocation and mutability rights.
+- View APIs expose borrowed projection types.
+- Reduces accidental lifetime coupling in higher layers.
 
 ```rust
-struct Table { buf: String }
+struct Buffer {
+    data: String,
+}
 
-struct LineView<'a> {
-    raw: &'a str,
+impl Buffer {
+    fn as_str(&self) -> &str { &self.data }
 }
 ```
 
-== Stable Handle Pattern
-- Return indices/keys instead of references when mutation follows.
-- Avoid long borrow chains.
+== Handle-Based Update Pattern
+- Return IDs/indices instead of long-lived references.
+- Re-borrow only at mutation site.
+- Avoids global borrow entanglement.
 
+== Higher-Rank Callbacks in APIs
 ```rust
-fn find_id(xs: &[String], needle: &str) -> Option<usize> {
-    xs.iter().position(|x| x == needle)
+fn call_with_ref<F>(f: F)
+where
+    F: for<'a> Fn(&'a i32) -> &'a i32,
+{
+    let x = 10;
+    let y = f(&x);
+    println!("{y}");
 }
 ```
-
-== Borrow-Then-Compute Pitfall
-- Holding borrow across heavy computation blocks other operations.
-- Prefer compute-then-borrow or short inner scopes.
-
-```rust
-let idx = map.get(key).copied();
-if let Some(i) = idx {
-    values[i] += 1;
-}
-```
-
-== Interior Mutability Boundary
-- `Cell/RefCell` shift checks to runtime.
-- Useful for local invariants, caches, graph wiring.
-- Not a replacement for architectural clarity.
-
-```rust
-use std::cell::RefCell;
-
-let cache = RefCell::new(Vec::<i64>::new());
-cache.borrow_mut().push(10);
-```
-
-== `Rc<RefCell<T>>` Tradeoff
-- Enables shared ownership + mutation in single-threaded graphs.
-- Loses compile-time aliasing guarantees.
-- Runtime panics possible on borrow rule violation.
-
-== `Arc<Mutex<T>>` Parallel Analogue
-- Thread-safe shared mutation boundary.
-- Sync cost and deadlock risks become explicit concerns.
-- API should hide lock mechanics where possible.
-
-= Drop and Soundness Edges
-
-== Drop Check (dropck)
-- Destructor execution affects lifetime constraints.
-- Type with `Drop` may require borrowed fields to outlive drop.
-- Subtle when building self-referential or pinned structures.
-
-== Self-Referential Struct Trap
-- Moving value can invalidate internal self pointers.
-- Plain Rust structs cannot safely contain references to themselves.
-- Use indirection + pinning patterns instead.
-
-== Pinning Motivation
-- `Pin` prevents moves after pinning guarantee.
-- Essential for self-referential async state machines.
-- Pinning is about location stability, not mutability itself.
-
-```rust
-use std::pin::Pin;
-
-fn consume_pinned(_x: Pin<&mut Vec<u8>>) {}
-```
-
-= API Case Studies
-
-== Case Study: Parser API
-- Bad API returns references to ephemeral parse buffer.
-- Better API stores owned input and returns borrowed views.
-- Best choice depends on expected pipeline lifetime.
-
-== Case Study: Builder vs Borrowed Config
-- Borrowed config avoids cloning during assembly.
-- Final built object should usually own required data.
-- Keep borrow complexity in construction phase, not runtime phase.
-
-== Case Study: Batch Processing
-- Input as `&[T]`, output owned summary.
-- Avoid exposing internal references unless required.
-- Improves call-site ergonomics and test stability.
-
-```rust
-fn summarize(xs: &[i64]) -> (i64, i64) {
-    let sum = xs.iter().sum::<i64>();
-    let max = xs.iter().copied().max().unwrap_or(0);
-    (sum, max)
-}
-```
+- Useful when callback must be lifetime-polymorphic.
 
 = Diagnostics Workflow
 
-== Reading Borrow Errors
-- Start from first error, not last.
+== Reading Borrow Errors Effectively
+- First error is usually root cause.
 - Identify conflicting borrows and their live ranges.
-- Reduce live range first, clone last.
+- Minimize live range before structural escalation.
 
-== Typical Fix Sequence
-- Introduce local scope blocks.
-- Replace reference return with owned return if contract allows.
-- Split data structure into independently borrowed parts.
-- Use handles/ids when mutation and lookup interleave.
+== Resolution Order
+- Introduce narrower scopes.
+- Split data into disjoint borrows.
+- Use handle/ID indirection.
+- Use interior mutability only when semantic fit is explicit.
 
-== What Not To Do
-- Do not blindly add `clone()` everywhere.
-- Do not default to `Rc<RefCell<T>>` for every conflict.
-- Do not hide lifetime bugs behind unnecessary heap allocation.
-
-== Final Rules
-- API lifetime story must be intentional, not accidental.
-- Minimize borrow duration at call boundaries.
-- Prefer explicit ownership transitions over implicit coupling.
-- If it is hard to explain borrow semantics, redesign API shape.
+== Quality Target
+- Lifetime relationships should be evident from API signatures.
+- Caller should not need hidden ownership assumptions.
+- Borrow checker should confirm design, not fight accidental coupling.
