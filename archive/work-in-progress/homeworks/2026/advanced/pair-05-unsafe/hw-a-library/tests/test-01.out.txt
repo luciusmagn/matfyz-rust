@@ -1,0 +1,5 @@
+cap=2 len=0 empty=true
+push1=Ok(())
+push2=Ok(())
+push3=Err(30)
+slice=[10, 20]

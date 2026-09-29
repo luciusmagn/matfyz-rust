@@ -1,5 +1,0 @@
-INFO=0
-WARN=0
-ERROR=0
-OTHER=0
-status=ok

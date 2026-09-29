@@ -1,0 +1,2 @@
+aligned=Ok(Some(1))
+misaligned=Misaligned

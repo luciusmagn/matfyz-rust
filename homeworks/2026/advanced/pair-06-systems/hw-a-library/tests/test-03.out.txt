@@ -1,2 +1,0 @@
-/srv/app/logs/today.txt
-/opt/data

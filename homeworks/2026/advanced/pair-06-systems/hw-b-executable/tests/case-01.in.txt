@@ -1,6 +1,0 @@
-5
-INFO started
-WARN disk 80%
-ERROR panic happened
-INFO retry
-DEBUG detail

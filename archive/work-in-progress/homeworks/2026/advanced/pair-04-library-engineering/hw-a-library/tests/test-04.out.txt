@@ -1,0 +1,3 @@
+take=Ok(())
+try=Err(Closed)
+wait=Err(Closed)

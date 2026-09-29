@@ -1,0 +1,3 @@
+interior=InteriorNul(2)
+missing=MissingTerminator
+prefix=3

@@ -22,23 +22,10 @@
 <section id="course-organization" class="level2">
 <h2>Course organization</h2>
 <ul>
-<li>Lectures and labs, 90 minutes each</li>
-<li>Six core lecture/lab pairs, plus an extension block</li>
-<li>Bring a laptop to the labs</li>
-<li>Visitors welcome; feel free to share the materials</li>
-<li><a href="https://d3s.mff.cuni.cz/teaching/rust">Schedule and course
-information</a></li>
-</ul>
-</section>
-<section id="homework" class="level2">
-<h2>Homework</h2>
-<ul>
-<li>ReCodEx; two assignments per core lecture/lab pair</li>
-<li>Executable tasks: <code>main.rs</code> and permitted extra
-files</li>
-<li>Library tasks: <code>solution.rs</code>, tested through its API</li>
-<li>Deadlines and grading: course page and assignment details</li>
-<li>Rust 1.88.0 for local testing and graded submissions</li>
+<li>Alternating weeks lectures/labs</li>
+<li>Bring your notebook to the labs</li>
+<li>Visitors welcome &amp; feel free to share the materials</li>
+<li>All materials will be published and lectures will be recorded</li>
 </ul>
 </section>
 <section id="contacts" class="level2 contacts-slide">
@@ -46,9 +33,10 @@ files</li>
 <ul>
 <li><a href="https://discord.gg/E4XpeWbJpx">Course Discord</a></li>
 <li><a href="https://discord.gg/ZPdaXex8">Rust CZ/SK Discord</a></li>
-<li>Direct contact with the instructors is also welcome</li>
-<li>Materials and examples: <a
-href="https://matfyz.lho.sh">matfyz.lho.sh</a></li>
+<li>You can email me also:
+<ul>
+<li>lukas@lambda-symbolics.com</li>
+</ul></li>
 </ul>
 <div class="discord-qr">
 <p><a href="https://discord.gg/E4XpeWbJpx"><img src="discord-qr.png"
@@ -62,8 +50,9 @@ alt="QR code for the course Discord" /></a></p>
 <li>Ownership, borrowing, and data structures</li>
 <li>Enums, pattern matching, and error handling</li>
 <li>Modules, traits, generics, and iterators</li>
-<li>Threads, synchronization, and asynchronous tasks</li>
-<li>Library design, testing, and dependencies throughout</li>
+<li>Threads, synchronization, and async</li>
+<li>Dependency management, library design, testing, documentation
+etc.</li>
 </ul>
 </section>
 <section id="rust-history" class="level2">
@@ -72,313 +61,321 @@ alt="QR code for the course Discord" /></a></p>
 <li>2006: Graydon Hoare starts the project</li>
 <li>2009: Mozilla begins sponsoring development</li>
 <li>2015: Rust 1.0</li>
-<li>2018: non-lexical lifetimes; 2019: async/await</li>
+<li>2018: non-lexical lifetimes</li>
+<li>2019: async/await</li>
 <li>2021: Rust Foundation</li>
+<li>2022: Rust in Linux kernel</li>
+<li>2025: Rust 2024 edition (lol)</li>
 </ul>
 </section>
-<section id="language-influences" class="level2">
-<h2>Language influences</h2>
+<section id="influences" class="level2">
+<h2>Influences</h2>
 <ul>
-<li>C++: resource management and zero-overhead abstractions</li>
-<li>ML-family languages: algebraic data types and matching</li>
-<li>Haskell: traits have similarities to type classes</li>
-<li>Cyclone: memory safety in a systems language</li>
-<li>Earlier Rust also explored Erlang-style concurrency</li>
+<li>OCaml/ML-family: basic syntax, algebraic data types and
+matching</li>
+<li>C++: resource management and zero-overhead abstractions
+<ul>
+<li>And the rest of syntax</li>
+</ul></li>
+<li>Haskell: traits (cf. Haskell type classes)</li>
+<li>Cyclone: memory safety</li>
+<li>Pre 2015 Rust also tried Erlang-style concurrency, classes, garbage
+collectors…</li>
 </ul>
 </section>
 <section id="design-goals" class="level2">
 <h2>Design goals</h2>
 <ul>
-<li>Memory safety without a mandatory garbage collector</li>
+<li>Memory safety without a CG</li>
 <li>Control over allocation, layout, and resource lifetime</li>
-<li>Abstractions that can compile to direct machine code</li>
-<li>Data-race prevention in safe code</li>
-<li>Interoperation with existing native libraries</li>
+<li>“Zero-cost abstractions” (-&gt; compile to direct and efficient
+assembly)</li>
+<li>No data-races in safe code</li>
+<li>Interop with existing libs</li>
+<li>Explicit &gt; implicit</li>
+<li>Clearly delimited unsafe</li>
 </ul>
 </section>
 <section id="resource-management" class="level2">
 <h2>Resource management</h2>
 <ul>
-<li>Manual management: explicit allocation and release</li>
-<li>Tracing GC: runtime checks which objects are reachable</li>
-<li>Ownership: a value is responsible for a resource</li>
-<li>Borrowing: access without taking ownership</li>
-<li>Rust combines ownership with static checks on access</li>
+<li>Lifetimes, borrowing, and ownership
+<ul>
+<li>Ownership: a value has exactly 1 owner</li>
+<li>Borrowing: temporary access to a resource</li>
+<li>Lifetimes: abstract information about how long can a value
+exist</li>
+</ul></li>
+<li>RAII (Resource Acquisition Is Initialization)
+<ul>
+<li>Resources (memory, handles…) are initialized when a value is
+created</li>
+<li>When a value is discarded (=dropped), resources are cleaned up</li>
+</ul></li>
 </ul>
 </section>
-<section id="static-guarantees" class="level2">
-<h2>Static guarantees</h2>
+<section id="static-analysis" class="level2">
+<h2>Static analysis</h2>
+<p>Rust tries to provide most of its guarantees at compile time
+already:</p>
 <ul>
-<li>Reject invalid operations before the program runs</li>
-<li>Check function bodies against their signatures</li>
-<li>Avoid relying on a caller’s undocumented behavior</li>
-<li>Some safe programs need a different representation</li>
-<li>Runtime checks where static checks are insufficient</li>
+<li>This generally means type safety, conversions</li>
+<li>Memory safety</li>
+<li>With the clippy linter and root attributes you can enforce more
+rules at compile time.</li>
 </ul>
 </section>
 <section id="installing-rust" class="level2">
 <h2>Installing Rust</h2>
 <ul>
-<li>Install through <a href="https://rustup.rs">rustup.rs</a></li>
-<li>Linux and macOS: a native linker/toolchain is also needed</li>
-<li>Windows: Rustup installer and MSVC build tools</li>
-<li>WSL is an alternative Windows setup</li>
-<li>Use Rustup to manage compiler versions independently</li>
-</ul>
-</section>
-<section id="course-toolchain" class="level2">
-<h2>Course toolchain</h2>
-<div class="sourceCode" id="cb1"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">rustup</span> toolchain install 1.88.0</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">rustup</span> override set 1.88.0</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">rustc</span> <span class="at">--version</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> <span class="at">--version</span></span></code></pre></div>
+<li>Install through <a href="https://rustup.rs">rustup.rs</a>
 <ul>
-<li>Set the override inside your course directory</li>
-<li>Use the ReCodEx compiler version for local testing</li>
-<li>Nightly features only when an assignment requests them</li>
+<li>System packages for Rust should generally be avoided</li>
+</ul></li>
+<li>Linux, macOS, *BSDs
+<ul>
+<li>You also need a native linker/toolchain</li>
+</ul></li>
+<li>Windows:
+<ul>
+<li>You also need MSVC build tools (or use WSL)</li>
+</ul></li>
 </ul>
 </section>
 <section id="editor-setup" class="level2">
 <h2>Editor setup</h2>
 <ul>
-<li>VS Code or VSCodium: rust-analyzer</li>
-<li>Neovim or Emacs: rust-analyzer through an LSP client</li>
+<li>VS Code or VSCodium:
+<ul>
+<li>rust-analyzer plugin</li>
+<li>TOML plugin</li>
+</ul></li>
+<li>Neovim or Emacs: rust-analyzer through an LSP client
+<ul>
+<li>I use lsp-mode in Emacs</li>
+</ul></li>
 <li>RustRover is another option</li>
-<li>CodeLLDB for debugging in VS Code/VSCodium</li>
-<li>TOML support for <code>Cargo.toml</code></li>
 </ul>
 </section>
 <section id="standard-tools" class="level2">
 <h2>Standard tools</h2>
-<div class="sourceCode" id="cb2"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">rustup</span> component add rustfmt clippy rust-src</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> fmt</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> clippy</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> test</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> doc <span class="at">--open</span></span></code></pre></div>
-<ul>
-<li>Formatting, diagnostics, tests, documentation</li>
-<li><code>rust-src</code>: standard-library sources for editor
-support</li>
-</ul>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">rustup</span> component add rustfmt clippy rust-src</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> fmt</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> clippy</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> test</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> doc <span class="at">--open</span></span></code></pre></div>
 </section>
 <section id="cargo-project" class="level2">
 <h2>Cargo project</h2>
-<div class="sourceCode" id="cb3"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> new demo</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> demo</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> check</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--release</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> new mfdemo</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> mfdemo</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> check</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># quick debug build</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># release build</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">--release</span></span></code></pre></div>
 <ul>
 <li><code>Cargo.toml</code>: package metadata and dependencies</li>
 <li><code>src/main.rs</code>: executable entry point</li>
-<li>Debug: faster compilation; release: optimized execution</li>
 </ul>
 </section>
 <section id="crates-and-packages" class="level2">
 <h2>Crates and packages</h2>
-<ul>
-<li>Crate: a library or executable compilation unit</li>
-<li>Package: a <code>Cargo.toml</code> and its associated targets</li>
-<li>One package can contain a library and several executables</li>
-<li>Modules organize code within a crate</li>
-<li>Cargo builds the package’s dependency graph</li>
-</ul>
+<p>crate == package == project - A crate may be comprised of a library
+and more th</p>
 </section>
 <section id="dependencies" class="level2">
 <h2>Dependencies</h2>
-<div class="sourceCode" id="cb4"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> add regex</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> add regex</span></code></pre></div>
 <ul>
-<li><code>std</code> covers primitives, not every application
-domain</li>
+<li>Rust <code>std</code> is intentionally minimal and does not have
+things you might expect
+<ul>
+<li>e.g. no RNG, regex, DateTime, serialization, whatever nonsense is
+Python stdlib…</li>
+<li>“The standard library is where code goes to die…”</li>
+</ul></li>
 <li><a href="https://crates.io">crates.io</a>: package registry</li>
 <li><a href="https://docs.rs">docs.rs</a>: published API
 documentation</li>
 <li><a href="https://lib.rs">lib.rs</a>: an alternative crate
 directory</li>
-<li>Check maintenance, license, and supported Rust version</li>
 </ul>
 </section>
-<section id="first-program" class="level2">
-<h2>First program</h2>
-<div class="sourceCode" id="cb5"><pre
-class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;Hello, world!&quot;</span>)<span class="op">;</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<section id="hello-world-no-cargo" class="level2">
+<h2>Hello-world (no cargo)</h2>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;Hello, world!&quot;</span>)<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <ul>
-<li><code>fn</code>: function declaration; <code>main</code>: entry
-point</li>
-<li><code>println!</code>: macro with compile-time format checking</li>
-<li>Save as <code>hello.rs</code>; compile with
-<code>rustc hello.rs</code></li>
+<li><code>println!</code>: macro with compile-time fmt validation</li>
+<li>Save to e.g. <code>hello.rs</code></li>
+<li>Compile with <code>rustc hello.rs</code></li>
 <li>Run <code>./hello</code> on Unix or <code>.\hello.exe</code> on
 Windows</li>
 </ul>
 </section>
-<section id="values-and-types" class="level2">
-<h2>Values and types</h2>
-<div class="sourceCode" id="cb6"><pre
-class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> count<span class="op">:</span> <span class="dt">u32</span> <span class="op">=</span> <span class="dv">42</span><span class="op">;</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> ratio<span class="op">:</span> <span class="dt">f64</span> <span class="op">=</span> <span class="dv">0.25</span><span class="op">;</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> ready<span class="op">:</span> <span class="dt">bool</span> <span class="op">=</span> <span class="cn">true</span><span class="op">;</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> letter<span class="op">:</span> <span class="dt">char</span> <span class="op">=</span> <span class="ch">&#39;λ&#39;</span><span class="op">;</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{count} {ratio} {ready} {letter}&quot;</span>)<span class="op">;</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<section id="basic-values" class="level2">
+<h2>Basic values</h2>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> count<span class="op">:</span> <span class="dt">u32</span> <span class="op">=</span> <span class="dv">42</span><span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> ratio<span class="op">:</span> <span class="dt">f64</span> <span class="op">=</span> <span class="dv">0.25</span><span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> ready<span class="op">:</span> <span class="dt">bool</span> <span class="op">=</span> <span class="cn">true</span><span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> letter<span class="op">:</span> <span class="dt">char</span> <span class="op">=</span> <span class="ch">&#39;λ&#39;</span><span class="op">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{count} {ratio} {ready} {letter}&quot;</span>)<span class="op">;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <ul>
-<li>Static types; many local annotations can be inferred</li>
+<li>Rust is statically typed, but many local type annotations are/can be
+inferred</li>
 <li>Bindings are immutable unless declared <code>mut</code></li>
 </ul>
 </section>
-<section id="basic-types" class="level2">
-<h2>Basic types</h2>
+<section id="primitive-types" class="level2">
+<h2>Primitive types</h2>
 <ul>
-<li>Signed integers: <code>i8</code> through <code>i128</code></li>
-<li>Unsigned integers: <code>u8</code> through <code>u128</code></li>
-<li><code>isize</code>, <code>usize</code>: pointer-sized integers</li>
-<li><code>f32</code>, <code>f64</code>: floating-point numbers</li>
-<li><code>bool</code>: one byte; <code>char</code>: Unicode scalar
-value, four bytes</li>
-<li><code>()</code>: unit, a value with no stored data</li>
+<li>Signed integers:
+<ul>
+<li><code>i8</code> through <code>i128</code></li>
+</ul></li>
+<li>Unsigned integers:
+<ul>
+<li><code>u8</code> through <code>u128</code></li>
+</ul></li>
+<li><code>isize</code>, <code>usize</code>: ptr-sized integers</li>
+<li><code>f32</code>, <code>f64</code>: floats</li>
+<li><code>bool</code>:</li>
+<li><code>char</code>: Unicode scalar value, 4b (not 1 byte!)</li>
+<li><code>()</code>: unit, a value with no stored data
+<ul>
+<li>more precisely a 0-tuple</li>
+</ul></li>
 </ul>
 </section>
-<section id="data-representation" class="level2">
-<h2>Data representation</h2>
+<section id="some-more-types" class="level2">
+<h2>Some more types</h2>
 <ul>
-<li><code>[T; N]</code>: fixed-size array stored inline</li>
-<li><code>Vec&lt;T&gt;</code>: pointer, length, capacity; allocated
-elements</li>
-<li><code>String</code>: an owned UTF-8 buffer</li>
-<li><code>&amp;str</code>: a borrowed UTF-8 view, not a copied
-string</li>
-<li>Owning a buffer differs from having a pointer into it</li>
+<li><code>[T; N]</code>: fixed-size array
+<ul>
+<li>On the stack by default</li>
+</ul></li>
+<li><code>Vec&lt;T&gt;</code>
+<ul>
+<li>pointer, length, capacity</li>
+</ul></li>
+<li><code>String</code>
+<ul>
+<li>an <strong>owned</strong> UTF-8 buffer</li>
+</ul></li>
+<li><code>&amp;str</code>: a <strong>borrowed</strong> UTF-8 view into a
+string (does not have to String!)</li>
 </ul>
 </section>
 <section id="assignment-of-an-owned-value" class="level2">
 <h2>Assignment of an owned value</h2>
-<div class="sourceCode" id="cb7" data-error="E0382"><pre
-class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> text <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;hello&quot;</span>)<span class="op">;</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> other <span class="op">=</span> text<span class="op">;</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{text}&quot;</span>)<span class="op">;</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{other}&quot;</span>)<span class="op">;</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb6" data-error="E0382"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> text <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;hello&quot;</span>)<span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> other <span class="op">=</span> text<span class="op">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{text}&quot;</span>)<span class="op">;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{other}&quot;</span>)<span class="op">;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 </section>
-<section id="moves" class="level2">
-<h2>Moves</h2>
+<section id="moving-values" class="level2">
+<h2>Moving values</h2>
 <ul>
 <li><code>text</code> initially owns the string’s allocation</li>
 <li>Assignment transfers ownership to <code>other</code></li>
-<li>The old binding can no longer be used</li>
+<li>Old binding is invalid</li>
 <li>The string’s contents are not implicitly cloned</li>
 <li>Two independent owners must not free the same allocation</li>
 </ul>
 </section>
 <section id="explicit-copying" class="level2">
 <h2>Explicit copying</h2>
-<div class="sourceCode" id="cb8"><pre
-class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> text <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;hello&quot;</span>)<span class="op">;</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> other <span class="op">=</span> text<span class="op">.</span>clone()<span class="op">;</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{text} / {other}&quot;</span>)<span class="op">;</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> text <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;hello&quot;</span>)<span class="op">;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> other <span class="op">=</span> text<span class="op">.</span>clone()<span class="op">;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{text} / {other}&quot;</span>)<span class="op">;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <ul>
-<li><code>clone</code> copies this string’s allocation and contents</li>
-<li>The strings can now be changed independently</li>
-<li>Copying is explicit and has a runtime cost</li>
+<li><code>clone</code> makes a copy of the allocation and contents</li>
 </ul>
+<p>Rust generally does not do implicit copies of heap allocations</p>
 </section>
 <section id="borrowed-results" class="level2">
 <h2>Borrowed results</h2>
-<div class="sourceCode" id="cb9"><pre
-class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> first_word(input<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">{</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    input<span class="op">.</span>split_whitespace()<span class="op">.</span>next()<span class="op">.</span>unwrap_or(<span class="st">&quot;&quot;</span>)</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> line <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;systems programming&quot;</span>)<span class="op">;</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{}&quot;</span><span class="op">,</span> first_word(<span class="op">&amp;</span>line))<span class="op">;</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> first_word(input<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    input</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>      <span class="op">.</span>split_whitespace()</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>      <span class="op">.</span>next()</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>      <span class="op">.</span>unwrap_or(<span class="st">&quot;&quot;</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> line <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;systems programming&quot;</span>)<span class="op">;</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{}&quot;</span><span class="op">,</span> first_word(<span class="op">&amp;</span>line))<span class="op">;</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <ul>
 <li>The result may refer into the input’s allocation</li>
-<li>Its validity is tied to the input borrow</li>
+<li>Its validity is tied to the input borrow’s lifetime</li>
 </ul>
 </section>
 <section id="references-and-mutation" class="level2">
 <h2>References and mutation</h2>
-<div class="sourceCode" id="cb10" data-error="E0502"><pre
-class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> values <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">10</span><span class="op">,</span> <span class="dv">20</span><span class="op">,</span> <span class="dv">30</span>]<span class="op">;</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> first <span class="op">=</span> <span class="op">&amp;</span>values[<span class="dv">0</span>]<span class="op">;</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    values<span class="op">.</span>push(<span class="dv">40</span>)<span class="op">;</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{first}&quot;</span>)<span class="op">;</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb9" data-error="E0502"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> values <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">10</span><span class="op">,</span> <span class="dv">20</span><span class="op">,</span> <span class="dv">30</span>]<span class="op">;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> first <span class="op">=</span> <span class="op">&amp;</span>values[<span class="dv">0</span>]<span class="op">;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    values<span class="op">.</span>push(<span class="dv">40</span>)<span class="op">;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{first}&quot;</span>)<span class="op">;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 </section>
 <section id="vector-growth" class="level2">
 <h2>Vector growth</h2>
 <ul>
-<li><code>push</code> may allocate a larger buffer and move the
-elements</li>
-<li>A reference into the old buffer would become invalid</li>
-<li><code>push</code> requires exclusive access through
-<code>&amp;mut self</code></li>
-<li><code>first</code> is still used after that operation</li>
-<li>The shared and exclusive access cannot overlap here</li>
+<li><code>push</code> may allocate a larger buffer -&gt; allocation may
+move</li>
+<li>A reference into the old buffer would be a dangling ref</li>
+<li>Uh oh</li>
 </ul>
+<p>=&gt; shared and exclusive access cant overlap</p>
 </section>
 <section id="reserved-capacity" class="level2">
 <h2>Reserved capacity</h2>
-<div class="sourceCode" id="cb11" data-error="E0502"><pre
-class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> values <span class="op">=</span> <span class="dt">Vec</span><span class="pp">::</span>with_capacity(<span class="dv">64</span>)<span class="op">;</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    values<span class="op">.</span>push(<span class="dv">10</span>)<span class="op">;</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> first <span class="op">=</span> <span class="op">&amp;</span>values[<span class="dv">0</span>]<span class="op">;</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    values<span class="op">.</span>push(<span class="dv">20</span>)<span class="op">;</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{first}&quot;</span>)<span class="op">;</span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb10" data-error="E0502"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> values <span class="op">=</span> <span class="dt">Vec</span><span class="pp">::</span>with_capacity(<span class="dv">64</span>)<span class="op">;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    values<span class="op">.</span>push(<span class="dv">10</span>)<span class="op">;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> first <span class="op">=</span> <span class="op">&amp;</span>values[<span class="dv">0</span>]<span class="op">;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    values<span class="op">.</span>push(<span class="dv">20</span>)<span class="op">;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{first}&quot;</span>)<span class="op">;</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <ul>
-<li>Still rejected: the access rules do not track spare capacity</li>
+<li>This snippet is still rejected The compiler isn’t psychic and there
+will always be valid programs rejected by the borrow checker</li>
 </ul>
 </section>
-<section id="static-checking-and-api-contracts" class="level2">
-<h2>Static checking and API contracts</h2>
+<section id="unsafe-code" class="level2">
+<h2>Unsafe code</h2>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>allow<span class="at">(</span>deref_nullptr<span class="at">)]</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">unsafe</span> <span class="op">{</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// i&#39;m crashing this plane, with no survivors</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>(<span class="dv">0</span> <span class="kw">as</span> <span class="op">*</span><span class="kw">const</span> <span class="dt">u8</span>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <ul>
-<li>Function signatures describe permitted access</li>
-<li>Callers need not inspect the implementation</li>
-<li>Safe implementations can change without breaking callers</li>
-<li>Some valid executions cannot be expressed with this API</li>
-<li>Alternatives: a different representation, a shorter borrow</li>
-</ul>
-</section>
-<section id="end-of-a-borrow" class="level2">
-<h2>End of a borrow</h2>
-<div class="sourceCode" id="cb12"><pre
-class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> values <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">10</span><span class="op">,</span> <span class="dv">20</span><span class="op">,</span> <span class="dv">30</span>]<span class="op">;</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> first <span class="op">=</span> <span class="op">&amp;</span>values[<span class="dv">0</span>]<span class="op">;</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{first}&quot;</span>)<span class="op">;</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    values<span class="op">.</span>push(<span class="dv">40</span>)<span class="op">;</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{values:?}&quot;</span>)<span class="op">;</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
-<ul>
-<li>No later use of <code>first</code>; its borrow can end before
-<code>push</code></li>
-</ul>
-</section>
-<section id="indices-instead-of-references" class="level2">
-<h2>Indices instead of references</h2>
-<div class="sourceCode" id="cb13"><pre
-class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> values <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">10</span><span class="op">,</span> <span class="dv">20</span><span class="op">,</span> <span class="dv">30</span>]<span class="op">;</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> index <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    values<span class="op">.</span>push(<span class="dv">40</span>)<span class="op">;</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{}&quot;</span><span class="op">,</span> values[index])<span class="op">;</span></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
-<ul>
-<li>Appending preserves earlier indices</li>
-<li>Insertion or removal before an element shifts its index</li>
+<li><code>unsafe</code> blocks dont disable any compiler checks</li>
+<li>But let you do things that are potentially unsafe</li>
+<li>You need them for low-level/native things, when the borrowck is not
+smart enough, and when interfacing with foreing libraries</li>
+<li>Safe APIs can encapsulate an unsafe implementation</li>
 </ul>
 </section>
 <section id="resource-cleanup" class="level2">
@@ -394,14 +391,14 @@ dropped</li>
 </section>
 <section id="absence-as-a-value" class="level2">
 <h2>Absence as a value</h2>
-<div class="sourceCode" id="cb14"><pre
-class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> values <span class="op">=</span> [<span class="dv">10</span><span class="op">,</span> <span class="dv">20</span>]<span class="op">;</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> values<span class="op">.</span>get(<span class="dv">5</span>) <span class="op">{</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Some</span>(value) <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;{value}&quot;</span>)<span class="op">,</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>        <span class="cn">None</span> <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;no element&quot;</span>)<span class="op">,</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> values <span class="op">=</span> [<span class="dv">10</span><span class="op">,</span> <span class="dv">20</span>]<span class="op">;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> values<span class="op">.</span>get(<span class="dv">5</span>) <span class="op">{</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Some</span>(value) <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;{value}&quot;</span>)<span class="op">,</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>        <span class="cn">None</span> <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;no element&quot;</span>)<span class="op">,</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <ul>
 <li><code>Option&lt;T&gt;</code> distinguishes a value from its
 absence</li>
@@ -410,175 +407,38 @@ absence</li>
 </section>
 <section id="errors-as-values" class="level2">
 <h2>Errors as values</h2>
-<div class="sourceCode" id="cb15"><pre
-class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> result <span class="op">=</span> <span class="st">&quot;70000&quot;</span><span class="op">.</span><span class="pp">parse::</span><span class="op">&lt;</span><span class="dt">u16</span><span class="op">&gt;</span>()<span class="op">;</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> result <span class="op">{</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(port) <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;port {port}&quot;</span>)<span class="op">,</span></span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Err</span>(error) <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;{error}&quot;</span>)<span class="op">,</span></span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> result <span class="op">=</span> <span class="st">&quot;70000&quot;</span><span class="op">.</span><span class="pp">parse::</span><span class="op">&lt;</span><span class="dt">u16</span><span class="op">&gt;</span>()<span class="op">;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> result <span class="op">{</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(port) <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;port {port}&quot;</span>)<span class="op">,</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Err</span>(error) <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;{error}&quot;</span>)<span class="op">,</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <ul>
 <li><code>Result&lt;T, E&gt;</code> includes the error type in the
 contract</li>
 <li>Callers can handle errors or propagate them with <code>?</code></li>
 </ul>
 </section>
-<section id="error-handling-decisions" class="level2">
-<h2>Error-handling decisions</h2>
-<ul>
-<li>Recoverable errors are usually returned as values</li>
-<li><code>?</code> propagates errors through the function’s return
-type</li>
-<li>Ignoring a <code>Result</code> produces a warning by default</li>
-<li><code>unwrap</code> can panic; it is an explicit failure policy</li>
-<li>Types do not prove application behavior correct</li>
-</ul>
-</section>
-<section id="data-modelling" class="level2">
-<h2>Data modelling</h2>
-<div class="sourceCode" id="cb16"><pre
-class="sourceCode rust"><code class="sourceCode rust"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> Connection <span class="op">{</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    Disconnected<span class="op">,</span></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    Connected <span class="op">{</span> peer<span class="op">:</span> <span class="dt">String</span> <span class="op">},</span></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
-<ul>
-<li>Different states can contain different data</li>
-<li>A disconnected connection has no peer field to misuse</li>
-<li>Exhaustive matching checks that every case is handled</li>
-</ul>
-</section>
 <section id="exhaustive-matching" class="level2">
 <h2>Exhaustive matching</h2>
-<div class="sourceCode" id="cb17" data-error="E0004"><pre
-class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> State <span class="op">{</span> Stopped<span class="op">,</span> Running <span class="op">}</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> state <span class="op">=</span> <span class="pp">State::</span>Running<span class="op">;</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> state <span class="op">{</span></span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>        <span class="pp">State::</span>Running <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;running&quot;</span>)<span class="op">,</span></span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
-<ul>
-<li>Rejected: the <code>Stopped</code> case is missing</li>
-<li>Adding a variant exposes incomplete matches in callers</li>
-</ul>
+<div class="sourceCode" id="cb14" data-error="E0004"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> State <span class="op">{</span> Stopped<span class="op">,</span> Running <span class="op">}</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> state <span class="op">=</span> <span class="pp">State::</span>Running<span class="op">;</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> state <span class="op">{</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>        <span class="pp">State::</span>Running <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;running&quot;</span>)<span class="op">,</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 </section>
-<section id="borrowing-across-a-thread-boundary" class="level2">
-<h2>Borrowing across a thread boundary</h2>
-<div class="sourceCode" id="cb18" data-error="E0373"><pre
-class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> message <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;work&quot;</span>)<span class="op">;</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> handle <span class="op">=</span> <span class="pp">std::thread::</span>spawn(<span class="op">||</span> message<span class="op">.</span>len())<span class="op">;</span></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{}&quot;</span><span class="op">,</span> handle<span class="op">.</span>join()<span class="op">.</span>unwrap())<span class="op">;</span></span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<section id="next-time" class="level2">
+<h2>Next time</h2>
 <ul>
-<li><code>spawn</code> permits the new thread to outlive the current
-scope</li>
-<li>Its closure cannot retain this borrow of a local variable</li>
-</ul>
-</section>
-<section id="ownership-transfer-to-a-thread" class="level2">
-<h2>Ownership transfer to a thread</h2>
-<div class="sourceCode" id="cb19"><pre
-class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> message <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;work&quot;</span>)<span class="op">;</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> handle <span class="op">=</span> <span class="pp">std::thread::</span>spawn(<span class="kw">move</span> <span class="op">||</span> message<span class="op">.</span>len())<span class="op">;</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{}&quot;</span><span class="op">,</span> handle<span class="op">.</span>join()<span class="op">.</span>unwrap())<span class="op">;</span></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
-<ul>
-<li>The closure now owns <code>message</code></li>
-<li><code>join</code> waits for completion and returns the result</li>
-</ul>
-</section>
-<section id="shared-state" class="level2">
-<h2>Shared state</h2>
-<ul>
-<li>Ownership transfer avoids shared mutable state</li>
-<li>Shared ownership is possible, for example with
-<code>Arc&lt;T&gt;</code></li>
-<li>Mutation may require a mutex or another synchronization scheme</li>
-<li><code>Send</code> and <code>Sync</code> describe thread-safety
-properties</li>
-<li>Data-race freedom does not prevent deadlocks or logic races</li>
-</ul>
-</section>
-<section id="abstraction-costs" class="level2">
-<h2>Abstraction costs</h2>
-<div class="sourceCode" id="cb20"><pre
-class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> total<span class="op">:</span> <span class="dt">i32</span> <span class="op">=</span> (<span class="dv">1</span><span class="op">..=</span><span class="dv">100</span>)</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>map(<span class="op">|</span>n<span class="op">|</span> n <span class="op">*</span> n)</span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>sum()<span class="op">;</span></span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{total}&quot;</span>)<span class="op">;</span></span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
-<ul>
-<li>No intermediate collection is required by this pipeline</li>
-<li>Iteration and closures can be inlined in optimized builds</li>
-</ul>
-</section>
-<section id="traits-and-dispatch" class="level2">
-<h2>Traits and dispatch</h2>
-<ul>
-<li>Traits describe required behavior</li>
-<li>Generic code can use static dispatch, with code for each type</li>
-<li><code>dyn Trait</code> permits dynamic dispatch when useful</li>
-<li>Composition without class-inheritance hierarchies</li>
-<li>Runtime costs depend on the abstraction chosen</li>
-</ul>
-</section>
-<section id="runtime-costs" class="level2">
-<h2>Runtime costs</h2>
-<ul>
-<li>Allocation, cloning, locking, reference counting cost work</li>
-<li>Bounds checks may remain in generated code</li>
-<li>Generic instantiations can increase binary size and compile
-time</li>
-<li>Debug and release builds can perform very differently</li>
-<li>Zero-overhead abstraction is not a speed guarantee</li>
-</ul>
-</section>
-<section id="unsafe-code" class="level2">
-<h2>Unsafe code</h2>
-<ul>
-<li>Needed for some low-level operations and native interfaces</li>
-<li>Authors must uphold the operation’s safety requirements</li>
-<li>An <code>unsafe</code> block does not disable all compiler
-checks</li>
-<li>Safe APIs can encapsulate an unsafe implementation</li>
-<li>An implementation bug can invalidate its safety claim</li>
-</ul>
-</section>
-<section id="compiler-diagnostics" class="level2">
-<h2>Compiler diagnostics</h2>
-<ul>
-<li>Primary error: the operation the compiler rejected</li>
-<li>Source annotations: related uses and conflicting requirements</li>
-<li>Error explanations: <code>rustc --explain E0502</code></li>
-<li>Suggestions are possible changes, not always the right design</li>
-<li>Short examples separate type rules from application details</li>
-</ul>
-</section>
-<section id="before-the-next-lab" class="level2">
-<h2>Before the next lab</h2>
-<ul>
-<li>Install Rust 1.88.0 and configure your editor</li>
+<li>Install Rust and configure your editor</li>
 <li>Build and run a Cargo project</li>
 <li>Bring a laptop</li>
 <li>Course Discord and materials are linked at the start</li>
-</ul>
-</section>
-<section id="references" class="level2">
-<h2>References</h2>
-<ul>
-<li><a href="https://doc.rust-lang.org/book/">The Rust Programming
-Language</a></li>
-<li><a href="https://doc.rust-lang.org/rust-by-example/">Rust by
-Example</a></li>
-<li><a href="https://doc.rust-lang.org/std/">Standard library
-documentation</a></li>
-<li><a href="https://doc.rust-lang.org/cargo/">The Cargo Book</a></li>
-<li><a href="https://rust-lang.github.io/rustup/">The Rustup
-Book</a></li>
 </ul>
 </section>
 </section>

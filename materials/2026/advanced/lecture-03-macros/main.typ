@@ -15,111 +15,365 @@
 
 #title-slide()
 
-= Expansion Model
+= Metaprogramming
 
-== What a Declarative Macro Is
-- `macro_rules!` maps token-tree patterns to token-tree expansions.
-- Expansion runs before type checking.
-- Macro correctness and type correctness are separate phases.
+== Metaprogramming
+- Program manipulates program structure #pause
+- Transformation may happen before execution or during execution #pause
+- Macros are one compile-time metaprogramming technique #pause
+- Rust uses them heavily in the standard library
 
-== Why Macros Are Powerful
-- Remove repetitive syntax, not just repetitive computation.
-- Encode DSL-like call sites with compile-time checking.
-- Generate impl/test/module boilerplate consistently.
+== Compile-Time vs Runtime
+- Compile-time: macros, code generators, templating #pause
+- Runtime: reflection, dynamic evaluation, metaclasses #pause
+- Rust is much stronger on the compile-time side #pause
+- This is consistent with its zero-cost bias
 
-== Cost of Macro Power
-- Debugging errors can be harder than function errors.
-- Public macro syntax is public API.
-- Overly broad patterns produce poor diagnostics.
+== Kinds of Macros in Rust
+- Declarative macros: `macro_rules!` pattern matching over token trees #pause
+- Procedural macros: Rust code transforms token streams #pause
+- Attributes are macros too #pause
+- These two families behave quite differently
 
-== Expansion Pipeline
-- Parse source into token trees.
-- Match macro arm top-down.
-- Substitute metavariables into expansion.
-- Parse expanded output as normal Rust.
+== Macro Invocation Syntax
+- Invocation is always `name!(...)`, `name![...]`, or `name!{...}` #pause
+- Delimiter choice is usually stylistic, not semantic #pause
+- Parsing of the inside is up to the macro matcher or procedural macro code
+
+== Standard Library Macros
+#set text(size: 0.88em)
+#table(
+  columns: 2,
+  inset: 8pt,
+  align: horizon,
+  table.header([*Macro*], [*Purpose*]),
+  [`assert!`, `assert_eq!`, `assert_ne!`], [test assumptions at runtime],
+  [`format!`, `println!`, `write!`], [format-string frontends],
+  [`vec!`], [collection construction shorthand],
+  [`matches!`], [pattern test shorthand],
+  [`stringify!`, `concat!`, `compile_error!`], [compile-time helpers],
+  [`file!`, `line!`, `column!`, `module_path!`], [source-location information],
+  [`include!`, `include_str!`, `include_bytes!`], [embed external file contents],
+)
+#set text(size: 1em)
+
+== Built-In Macros
+- Some macros are compiler built-ins pretending to be ordinary `macro_rules!` items #pause
+- Example: `concat!`, `stringify!`, `format_args!` #pause
+- Their surface syntax looks ordinary even though expansion is compiler-supported
+
+= Declarative Macros
+
+== `macro_rules!`
+- Matcher on the left, expansion on the right #pause
+- Arms are tried top to bottom #pause
+- Matching is done on token trees, not typed AST nodes #pause
+- Expansion happens before type checking
+
+== Expansion Phases
+- Parse source into tokens and token trees #pause
+- Expand macro invocations #pause
+- Parse expanded output as ordinary Rust #pause
+- Only then run name resolution, type checking, borrow checking, and code generation
 
 == Minimal Example
 ```rust
 macro_rules! twice {
-    ($x:expr) => { 2 * ($x) };
+    ($x:expr) => {
+        2 * ($x)
+    };
 }
 
 let y = twice!(21);
 println!("{y}");
 ```
 
-= Pattern Language
+== Expansion Is Separate from Typing
+- Macro can expand to syntactically valid but type-incorrect code #pause
+- Macro can also fail before type checking due to matcher problems #pause
+- Macro reasoning and type reasoning are separate tasks
 
-== Fragment Specifiers
-- `expr`, `ident`, `ty`, `path`, `pat`, `item`, `stmt`, `tt`.
-- Choose the narrowest fragment that expresses intent.
-- Narrow fragments improve both matching and diagnostics.
-
-== `tt` Fragment
-- `tt` is the most flexible unit.
-- Useful for recursive parsing patterns.
-- Easy to misuse if grammar is underspecified.
-
-== Repetition Operators
-- `*` zero or more.
-- `+` one or more.
-- `?` optional single occurrence.
-- Separator is placed inside repetition form.
-
-```rust
-macro_rules! list {
-    ($($x:expr),* $(,)?) => {
-        vec![$($x),*]
-    };
-}
-```
-
-== Optional Trailing Comma
-- Common ergonomics expectation.
-- Use `$(,)?` in pattern where appropriate.
-- Keep behavior consistent across macro variants.
-
-== Nested Repetition
-- Needed for matrix/table-like syntax.
-- Requires careful metavariable alignment.
-- Mismatch errors can become non-obvious.
-
-= Hygiene and Name Resolution
-
-== Hygiene Principle
-- Macro-generated local identifiers do not capture caller locals by accident.
-- Captured metavariables preserve caller bindings.
-- This avoids a class of textual-substitution bugs.
+== Hygiene
+- Rust declarative macros are not textual substitution #pause
+- Macro-created locals do not accidentally capture caller locals #pause
+- Metavariables keep the caller's bindings
 
 == Hygiene Example
 ```rust
-macro_rules! make_tmp {
+macro_rules! using_a {
     ($e:expr) => {{
-        let tmp = 10;
-        tmp + ($e)
+        let a = 42;
+        $e
     }};
 }
 
-let tmp = 1;
-println!("{}", make_tmp!(tmp)); // caller tmp is still used inside ($e)
+let four = using_a!(a / 10);
 ```
 
-== Path Hygiene in 2026-Style Code
-- Prefer fully-qualified std/core paths inside macro expansions.
-- Avoid requiring caller imports for expansion internals.
-
+== Why This Fails
 ```rust
-macro_rules! boxed {
-    ($x:expr) => {
-        ::std::boxed::Box::new($x)
+let four = {
+    let a = 42;
+    /* macro-created binding */
+    a / 10
+};
+```
+- The `a` introduced by the macro has different syntax context #pause
+- The `a` inside `$e` still refers to the caller context #pause
+- Hygiene prevents accidental capture
+
+== Hygiene Fix
+```rust
+macro_rules! using_a {
+    ($a:ident, $e:expr) => {{
+        let $a = 42;
+        $e
+    }};
+}
+
+let four = using_a!(a, a / 10);
+```
+
+== Fragment Specifiers I
+- `expr`: expression #pause
+- `ident`: identifier or keyword-like identifier #pause
+- `ty`: type #pause
+- `path`: path in type-like syntax #pause
+- `pat` / `pat_param`: pattern forms
+
+== Fragment Specifiers II
+- `item`: item #pause
+- `stmt`: statement #pause
+- `block`: block expression #pause
+- `tt`: one token tree #pause
+- `meta`, `literal`, `vis`, `lifetime`: specialized fragments
+
+== `tt`
+- `tt` is the escape hatch fragment #pause
+- It matches one token or one delimited token tree #pause
+- Recursive macros often rely on it #pause
+- It is powerful and easy to misuse
+
+== Repetition
+- `$()*` means zero or more #pause
+- `$()+` means one or more #pause
+- `$()?` means optional single occurrence #pause
+- Put the separator inside the repetition form
+
+== `vec!`-Style Pattern
+```rust
+macro_rules! vec_of_stringified {
+    ($($element:expr),* $(,)?) => {{
+        let mut temp_vec = Vec::new();
+        $(
+            temp_vec.push(stringify!($element));
+        )*
+        temp_vec
+    }};
+}
+```
+
+== Repetition Notes
+- `$(,)?` is the standard way to allow an optional trailing comma #pause
+- Nested repetition is possible, but metavariable alignment gets harder #pause
+- Error messages get worse as grammar becomes more clever
+
+== Counting Arguments with a Macro
+```rust
+macro_rules! assert_min_args {
+    (@count) => { 0 };
+    (@count $first:expr $(, $rest:expr)*) => {
+        1 + assert_min_args!(@count $($rest),*)
+    };
+```
+==
+```rust
+    ($min_count:expr, $($args:expr),+ $(,)?) => {
+        const _: () = {
+            let count: usize = assert_min_args!(@count $($args),+);
+            assert!(count >= $min_count, "Not enough arguments provided");
+            ()
+        };
     };
 }
 ```
 
-== `$crate` for Internal References
-- `$crate` makes intra-crate macro references robust.
-- Important when macro is exported and used from other crates.
+== Matcher Restrictions
+- Not every token may follow every fragment kind #pause
+- This is the follow-set restriction system #pause
+- It exists so the parser can keep macro matching unambiguous
 
+== Follow-Set Rules
+#set text(size: 0.9em)
+- `expr` and `stmt` may only be followed by `=>`, `,`, or `;` #pause
+- `pat` and `pat_param` have their own allowed follower sets #pause
+- `ty` and `path` are also restricted #pause
+- `tt` has no such restriction
+#set text(size: 1em)
+
+= Procedural Macros
+
+== Procedural Macros
+- Procedural macros are Rust programs that receive tokens and return tokens #pause
+- They live in a dedicated proc-macro crate #pause
+- They are much less constrained than `macro_rules!`
+
+== Why a Separate Crate
+- Proc-macro crates compile to a dynamic library loaded by the compiler #pause
+- That is why the macro cannot usually live in the same crate as its use site #pause
+- Common pattern: proc-macro crate plus ordinary crate re-exporting macros
+
+== Typical Dependencies
+- `proc_macro`: compiler token stream API #pause
+- `syn`: parser for Rust syntax #pause
+- `quote`: quasi-quoting tokens back out #pause
+- `proc_macro2`: library-friendly substitute for compiler token stream types
+
+== Proc-Macro Crate Setup
+```toml
+[package]
+name = "my_proc_macro"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = "1.0"
+quote = "1.0"
+```
+
+== Function-Like Proc Macro
+```rust
+use proc_macro::TokenStream;
+use quote::quote;
+
+#[proc_macro]
+pub fn make_function(input: TokenStream) -> TokenStream {
+    let name = syn::parse::<syn::Ident>(input).unwrap();
+```
+==
+```rust
+    let output = quote! {
+        fn #name() -> String {
+            String::from("Hello, world!")
+        }
+    };
+    output.into()
+}
+```
+
+== Derive Macro
+```rust
+use proc_macro::TokenStream;
+use quote::quote;
+use syn::{parse_macro_input, DeriveInput};
+
+#[proc_macro_derive(SimpleDebug)]
+pub fn simple_debug_derive(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = &input.ident;
+```
+==
+```rust
+    let output = quote! {
+        impl std::fmt::Debug for #name {
+            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+                write!(f, stringify!(#name))
+            }
+        }
+    };
+    output.into()
+}
+```
+
+== Attribute Macro
+```rust
+use proc_macro::TokenStream;
+use quote::quote;
+use syn::{parse_macro_input, AttributeArgs, ItemFn};
+
+#[proc_macro_attribute]
+pub fn log_execution(args: TokenStream, input: TokenStream) -> TokenStream {
+    let input_fn = parse_macro_input!(input as ItemFn);
+    let _args = parse_macro_input!(args as AttributeArgs);
+    let fn_name = &input_fn.sig.ident;
+```
+==
+```rust
+    let output = quote! {
+        #input_fn
+        fn modified_#fn_name() {
+            println!("Executing function: {}", stringify!(#fn_name));
+            #fn_name();
+            println!("Finished executing: {}", stringify!(#fn_name));
+        }
+    };
+    output.into()
+}
+```
+
+== Proc-Macro Notes
+- Proc macros are effectively unhygienic compared with declarative local-variable hygiene #pause
+- Use absolute paths in generated code when appropriate #pause
+- Generated code is ordinary Rust and should be read as such
+
+= Resolution and Scope
+
+== Definition Order
+- Declarative macros are generally available only after their definition #pause
+- This differs from items like functions #pause
+- Imported macros also follow macro-specific resolution rules
+
+== Accessibility Example
+```rust
+mod a {
+    // X!(); // undefined
+}
+
+mod b {
+    macro_rules! X { () => {}; }
+    X!();
+}
+```
+==
+```rust
+mod c {
+    // X!(); // undefined
+}
+```
+
+== Shadowing
+```rust
+macro_rules! X { (1) => {}; }
+X!(1);
+
+macro_rules! X { (2) => {}; }
+// X!(1); // no rule matches `1`
+X!(2);
+```
+==
+```rust
+mod a {
+    macro_rules! X { (3) => {}; }
+    X!(3);
+}
+
+X!(2);
+```
+
+== `#[macro_export]`
+- `#[macro_export]` exports a declarative macro from the crate root #pause
+- Legacy `#[macro_use]` still exists but is older style #pause
+- Visibility keywords on declarative macros do not behave like ordinary item visibility
+
+== `$crate`
+- `$crate` refers to the defining crate root #pause
+- Use it when one exported macro calls helpers from the same crate #pause
+- This avoids breakage at external call sites
+
+== `$crate` Example
 ```rust
 macro_rules! call_helper {
     () => {
@@ -128,136 +382,47 @@ macro_rules! call_helper {
 }
 ```
 
-= Error Design
-
-== Fallback Arm Strategy
-- Final arm with `compile_error!` gives predictable diagnostics.
-- Put strict valid forms first.
-- Keep error text domain-specific.
-
+== Keyword Matching Oddity
 ```rust
-macro_rules! op {
-    (add $a:expr, $b:expr) => { $a + $b };
-    (sub $a:expr, $b:expr) => { $a - $b };
-    ($($rest:tt)*) => {
-        compile_error!("op!: expected `add <expr>, <expr>` or `sub <expr>, <expr>`");
-    };
+macro_rules! what_is {
+    (self) => { "the keyword `self`" };
+    ($i:ident) => { concat!("the identifier `", stringify!($i), "`") };
+}
+
+macro_rules! call_with_ident {
+    ($c:ident($i:ident)) => { $c!($i) };
 }
 ```
-
-== Ambiguity Control
-- Avoid overlapping arms with similar prefixes.
-- If overlap is required, order arms from specific to general.
-- Ambiguity often appears in DSL-like macros.
-
-== User-Facing Macro UX
-- Error points should indicate bad token region.
-- Macro syntax should be minimal and regular.
-- Avoid hidden side effects in expansion.
-
-= Advanced Patterns
-
-== TT Muncher
-- Recursive macro that consumes token stream progressively.
-- Typical for custom mini-parser behavior.
-- Must include explicit base case to terminate.
-
+==
 ```rust
-macro_rules! count_idents {
-    () => {0usize};
-    ($head:ident $(, $tail:ident)*) => {
-        1usize + count_idents!($($tail),*)
-    };
+fn main() {
+    println!("{}", what_is!(self));
+    println!("{}", call_with_ident!(what_is(self)));
 }
 ```
-
-== Accumulator Pattern
-- Carry partial state across recursive calls.
-- Useful for token transforms and normalization.
-- Keep accumulator representation simple.
-
-== Macro-Generated Impl Blocks
-- Great for repetitive trait impls.
-- Keep generated code inspectable.
-- Avoid generating surprising blanket impl combinations.
-
-```rust
-macro_rules! impl_display_num {
-    ($($t:ty),* $(,)?) => {
-        $(
-            impl MyDisplay for $t {
-                fn render(&self) -> String { self.to_string() }
-            }
-        )*
-    };
-}
+==
+```text
+the keyword `self`
+the keyword `self`
 ```
 
-== Macro-Generated Tests
-- Reduce copy-paste in parameterized tests.
-- Deterministic test naming matters for CI readability.
+= Tooling and Limits
 
-```rust
-macro_rules! case {
-    ($name:ident, $input:expr, $expected:expr) => {
-        #[test]
-        fn $name() {
-            assert_eq!(solve($input), $expected);
-        }
-    };
-}
-```
+== Development Tools
+- `cargo expand` shows expansion result #pause
+- `trace_macros!()` prints declarative expansion steps on nightly #pause
+- `log_syntax!()` dumps passed tokens on nightly #pause
+- `macro_railroad` can visualize declarative macro grammars
 
-= Interactions with Type System
+== What Macros Are Bad At
+- Complex grammar quickly destroys diagnostics #pause
+- Clever mini-languages are hard to maintain #pause
+- Type-directed behavior is limited in declarative macros #pause
+- Sometimes a function, trait, build script, or code generator is the better tool
 
-== Macros and Type Inference
-- Macro expands before type checking.
-- Inference failures often look like ordinary type errors.
-- Add type ascription at call site when diagnostics are unclear.
+== Reading List
+- The Little Book of Rust Macros #pause
+- Rust Reference: macros by example #pause
+- Rust Reference: procedural macros
 
-== Trait Bounds in Expansion
-- Generated code can require trait bounds caller did not expect.
-- Document these requirements explicitly in macro docs.
-- Hidden bounds are common source of user confusion.
-
-== `expr` vs `tt` API Choice
-- `expr` gives stronger syntactic guarantees.
-- `tt` gives flexibility but weaker guarantees.
-- Prefer `expr` unless grammar genuinely needs `tt`.
-
-= Public API and Versioning
-
-== Macro Syntax as SemVer Surface
-- Removing accepted form is a breaking change.
-- Tightening pattern fragments can break callers.
-- Reordering ambiguous arms can change behavior.
-
-== Edition and Context Sensitivity
-- Macro behavior can differ with path resolution context.
-- Test from external crate, not only internal tests.
-- Exported macros deserve integration tests.
-
-== Documentation Pattern
-- Provide at least one minimal and one advanced example.
-- Document accepted grammar in bullet form.
-- Document failure forms with expected diagnostics.
-
-= Practical Engineering
-
-== Debugging Expansion
-- Use `cargo expand` when reasoning about generated code.
-- Read expanded code as normal Rust first.
-- Keep expansions small enough for human review.
-
-== Review Checklist
-- Is macro needed vs function/trait?
-- Is grammar small and explicit?
-- Are diagnostics precise?
-- Is expanded code unsurprising?
-- Is semver impact understood?
-
-== Final Rules
-- Macros should compress boilerplate, not hide design.
-- If expansion logic is hard to explain, simplify grammar.
-- Prefer two simple macros over one clever parser macro.
-- Keep macro call sites readable for non-authors.
+= Questions?

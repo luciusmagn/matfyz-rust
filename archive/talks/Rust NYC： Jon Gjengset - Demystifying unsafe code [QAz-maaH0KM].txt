@@ -1,0 +1,177 @@
+(Transcribed by TurboScribe. Go Unlimited to remove this message.)
+
+Jmenuji se John, pro těch, kteří mě už nevědějí, z jedného mídy nebo druhého. Jednou z věcí, kterou observuji, je to, jak jsme jsme všichni alergiční v Unsafe Code, nebo my si myslíme, že Unsafe Code je v pořádku a nemůžeme se o něčeho dělat. Chtěl bych vzít, co je Unsafe, protože myslím si, že velká záležitost komunikace na tomto topiku přijde od toho, že Unsafe je většinou myslí.
+
+Myslím si, že chci vytvořit ten problém. Nemyslím se, že můžu to vytvořit v 25 minutách, ale zkusím. Takže v tomto řešení zkusím vytvořit Unsafe.
+
+Nemyslím vám, jak napisat pravdivý Unsafe Code, ale zkusím vytvořit některé záležitosti, které můžete chtět Unsafe, a některé záležitosti, které musíte být otevření. A není to něco, co musíte používat. Můžete také vytvořit toto řešení jako, že je to jen C, než je to cíl.
+
+Nikdy z těchto extrémů není pravdivý. A je velmi důležitý, že jsme všichni na to správní. Napisat Unsafe není jen napisat C Code.
+
+Je to více nebezpečné než to, a vytvořím, jak. Ale také není cíl. Jsou mnoho věcí, které Unsafe je potřeba, nebo úžasné.
+
+A to musíme představit. Chci první představit, proč jsme potřebovali Unsafe. Proč jsme měli Unsafe v prvním místě? Unsafe byl představěný, proč Unsafe? Některé věcí, které potřebuje Unsafe, jsou tím, že Unsafe je tady, abychom mohli napisat kód, kterým záležitostí je na záležitosti, kterou nemůžeme představit.
+
+Představuji některé z těch představí, když představujeme těch slidů. V Unsafe jsme záležitostní, protože záležitostní nemůže představit, co my děláme. A nejen záležitostní, ale víc o záležitostních záležitostích.
+
+První představění je pracování s hardware. Když pracujete s hardware, můžete představit něco na scéně, když tvoje hardware začíná pracovat. V této chvíli nemůžete pracovat.
+
+Všechno, co můžete mít, jsou jen různé představy, které jsou představovány v Intelu, Biosu nebo nějakého obskurého představu z 80. A můžete představit, že na této představě v záležitosti máte hodinu představů, které můžete představovat na scéně. To je pravda.
+
+Tady můžete představovat na scéně. Kompilér nemůže to vědět. Víte to jako programovací.
+
+A víte, že nikdo jiný nemůže představovat na této představu. Protože jste v možnosti. Není tu nic jiného.
+
+Takže můžete představovat ten kód. Můžete představovat tento představu na změřitelný představ a pak to představovat na změřitelný představ. Víte, že ten kód je bezpečný.
+
+V této chvíli kompilér nemůže to vědět. Představovat ten kód v někde jiném, jako v vašem různém FM mainu, nebude bezpečný. Ale je bezpečný před bootem, když máte vědět, že ten představ je změřitelný.
+
+To je to, na čem se záleží, protože kompilér nemůže to představovat. Další představ je, když se chtěte představovat s externým představem. Představujete, že chtěte představovat C libričku, nebo možná C librička je jako Java při JNI.
+
+Kompilér nemůže vědět, co ten představ udělá. Všimte si, že ten představ vytvoří všechny řízení. Nevíte, co to je.
+
+Vy vysvětlíte, že vědíte, že ten představ, který to výkonně vytvoří, nevětší něco špatného. Vy vysvětlíte, že ten představ vytvoří všechny záležitosti. Kompilér nemůže to představovat, takže musíte použít Unsafe, aby o tom řekl kompilér.
+
+Další místo, kde Unsafe se vylíbá, je když se představujete konkurence. Představte si, že chcete implementovat Mutex typu. Co se Mutex typu udělá? Vnitřně se staví prostřední pojter k nějakému místu v městi, které někdy dává způsob způsob způsobu.
+
+Kompilátor nemůže vědět, že všichni způsoby způsob způsobu jen způsob způsobu způsobu způsob způsobu jednou způsobou. Tohle je API pro Mutex, když se zavřete, která udělá nějaký atomický, to není tak, jak jsou všechny Mutexy vytvořeny, ale to je jen jedno příklad, kde se budete představit a vytvořit cestu, pokud se to stane pravdější. A na tohle způsobu vědíte, že nikdo jiný je v tomto segmentu kódu.
+
+Nikdo jiný má Mutex způsob. Takže je v pohodě, abyste vytvořili DRefMute pro ten způsob způsobu a dostali způsob způsob způsobu. Ale kompilátor nemůže to vědět.
+
+Kompilátor nemůže vědět, že nikdo jiný to způsobuje způsob způsobu. Takže potřebujeme Unsafe, abychom kompilátoři představili, že jsme věděli náš kód, a věděli jsme, že to je způsob. Je tam další kategoria, kterou jsem nevěděl, ale myslím, že je to důležité, když se o Unsafe říkáme.
+
+A to je představení limitace borovčekrů. Jsou nějaké patrny, které nemusí borovčekr představit. Většinou jsou to věděné patrny, které můžete zkoušet v Unsafe.
+
+Jedním z příkladů je to, abychom chtěli vrátit představení představení způsobem limitace borovčekrů. Takže ta funkce tady, když máte takovou sekvenci funkcí, nebude to kompilovat. Nyní na Unsafe představení borovčekrů.
+
+Je to věděná patrna, kterou nemůžete představit. Takže to můžete představit v Unsafe. Většinou nemůžete.
+
+Zkoušte jiný cestu, kterou můžete představit. To je většinou lepší. A to je také důvod, proč nemám vám představit cestu představení borovčekrů.
+
+Protože to nemůžete představit. Většinou když borovčekrů vám říkají, že vaše cesta není bezpečná, to je pravda. A když se dostanete do záležitosti k tomu, že vím, co dělám, to se možná nevrátí.
+
+A to může mít hodně zlepšené záležitosti, jak to uvidíme příště. Většinou s borovčekrům je lepší představit svůj cestu něco jiným, nebo počkejte. Borovčekr se vyprovovává den na den.
+
+Máme také Poloniusu, takovou novou borovčekrům iteraciu, která se představí a představí mnoho z těch problémů. Poslední kategorie, která připadá hodně, je performace optimizace. A tohle je možná největší kontenciální způsob, který se může použít na Safe, kde se může představit svůj cestu, ale si se představujete v nebezpečným způsobě, protože si chtěli ten největší ounce performace z svého cesta.
+
+A někdy to je opravdu potřebné, ale teď vám představím, abychom to představili prvně, a především dvěkrát. Je to velmi rádostně kvůli toho marginálního způsobu performace, kterou vždy vám představujete, kvůli cestě, kterou představuje představování nebezpečného na svůj cestu. Protože teď zároveň říkáte kompilátoru, že jste představili nějaké nebezpečnosti, které musíte udělat, abychom měli na svůj cestu představovat za všechnoho času.
+
+Když jste představovali nějaké nebezpečnosti, které musíte udělat, abychom měli na svůj cestu za všechnoho času, abychom měli na svůj cestu představovat na svůj cestu představovat na svůj cestu představovat na svůj cestu představovat na svůj cestu představovat na svůj cestu představovat na svůj cestu představovat na svůj cestu představovat na svůj cestu představovat na svůj cestu představovat na svůj cestu představovat na svůj cestu představovat na svůj cestu představovat na svůj cestu představovat na svůj cestu představovat na svůj cestu na svůj cestu představovat na svůj cestu na svůj cestu představovat na svůj cestu představovat na svůj cestu představovat na svůj cestu představovat na svůj cestu představovat na svůj cestu představovat na svůj cestu představovat na svůj cestu představovat na svůj cestu představovat na svůj cestu představovat na svůj cestu představovat na svůj cestu představovat na svůj cestu říká, že no-code vždy nevytvoří válidní váliku, a jsou to všechny válidní váliky. A je hodně debátí, vždycky se lidmi, kteří opravdu věří, kterou válidní váliku v Rustu vždycky má. Je nějaká bit patrna válida F64? To nejde.
+
+Možná. To je jedna z těch věcí, které se chtějí zjistit. Je nějaká bit patrna pro boolean byte? Válida. 
+
+To nejde. Myslím, že Rust bytečně říká, že to musí být 0 nebo 1. Pracovat na každou další bit patrnu a vzít to na boolean, to je neznamená věc. A musíte být věděni z těchto různých věcí, když chcete vytvořit správný nebezpečný kód.
+
+Některé nepotřebují to, a v některých důležitých věcích nebezpečný nebezpečný kód může být těžký zjistit, ale je věřitelné, že těchto různých věcí vždycky potřebujete. Co to znamená? Když některé nepotřebujete, co se stane? Vždycky nebezpečný nebezpečný kód je nebezpečný nebezpečný věcí. Není vždy.
+
+V některých důležitých důležitých důležitých je nebezpečný nebezpečný věcí. A nebezpečný nebezpečný věcí je jako hrát ruskou rouletku. Nemůžu to říct silně.
+
+Když nebezpečný nebezpečný kód je nebezpečný nebezpečný věcí. Když nebezpečný nebezpečný věcí je nebezpečný nebezpečný věcí. Když nebezpečný nebezpečný věcí je nebezpečný nebezpečný věcí.
+
+Když nebezpečný nebezpečný věcí je nebezpečný nebezpečný věcí. Když nebezpečný nebezpečný věcí je nebezpečný nebezpečný věcí. Když nebezpečný nebezpečný věcí je nebezpečný nebezpečný věcí.
+
+Když nebezpečný nebezpečný věcí je nebezpečný nebezpečný věcí. Když nebezpečný nebezpečný věcí je nebezpečný nebezpečný věcí. Když nebezpečný nebezpečný věcí je nebezpečný nebezpečný věcí.
+
+Když nebezpečný nebezpečný věcí je nebezpečný nebezpečný věcí. Když nebezpečný nebezpečný věcí je nebezpečný nebezpečný věcí. Když nebezpečný nebezpečný věcí je nebezpečný nebezpečný věcí.
+
+Když nebezpečný nebezpečný věcí je nebezpečný nebezpečný věcí. Když nebezpečný nebezpečný věcí je nebezpečný nebezpečný věcí. V Rustu je možné představit, že kód na pravdě je stejný, než kód na lehce.
+
+To znamená, že je možné představit, že můžete jen jednou představit lehcí věc a jen ji zkoušet. A můžete optimizovat dvouček pro if. A speciálně v C a C++ ta optimizace nebyla legalní, protože i a o, dva parametry k funkci, které by měly představit, můžou představit samou pamětnosti.
+
+V C je to úplně takové. A pokud představují samou pamětnosti, tak představte, co se stane. Vybíjíme tento představ, ale nevybíjíme tento představ.
+
+To je možné v C, to není možné v Rustu. A takže, když vybíjete kód na pravdě jako představ, představte, že máte nějaké věci a dáte z ní zvukový představ a zvukový představ. Někdo může takový představ zvukový představ představit.
+
+Kompilér to optimizuje pod významy aliasů. Takže to představuje takový představ. Takže ten kód zrovna vytvořuje zlý představ.
+
+Protože vytvořujete aliasů, které kompilér představuje. Další představ, to je více kódu, ale chci to pokračovat, protože je to trochu subtilní. Takže tady budeme napisat funkci na VEC, která bude vytvořit představ.
+
+A pomysl je, že to bude představovat zlý představ, který představuje zlý představ, který představuje zlý představ a který představuje zlý představ v každém zlý představu. Je to relativně prostorová funkce v tom, co to dělá. Jsme smrtní vývojníci, nemusíme dělat mnoho zvuků v rámci, protože možná budeme muset vytvořit představ mnoha krát a to je zážitek.
+
+Takže prvním, co budeme dělat, je představovat dostatečné místo v rámci pro všechny elementy, které budeme muset vytvořit. Potom budeme dostat východní čast. Potom budeme nebezpečně představovat čast v rámci a být představovat představ a pak budeme představovat všechny vývoje, které jsou F na každém, a představovat představ představovat představ v rámci.
+
+Tento představ je správný. Není v tom představu věc. Ale... Není v tom představu věc.
+
+Když to představujete a všechno půjde normálně, tak to představuje správně a dělá to pravdější. Takže nemusíte se na to poslouchat. Ale chtěl bych vám zjistit, co se stane, když F panikuje.
+
+Když F panikuje, tak ta funkce vrátí a její rodina bude panikovat a bude vytvářet. Když to představuje, co to představuje? Představuje všechny věci a představuje vrát na nich. Ale jsme představujeli věc tady a panikujeme, předtím, kdy jsme vytvořili všechny věci.
+
+To znamená, že některé věci v představě, které jsou před začátkem představu a na konci představu, mají neinitializovanou paměť. Neměli jsme to představit. Takže vytvoření věcí budou představovat nějakou nebezpečnou paměť a to je neinitializované představování.
+
+Vypadá, že to je jedna z důvodů, proč představujeme představu začátek představu je hodně těžká, protože musíme se s tím záležit. Co když někdo panikuje, když představujeme představu? A musíme si myslet o všech těch věcích. Tady je další představu, který jsem představoval hodně předtím s podobným data strukturem.
+
+Tady budeme mít něco jméno LazyDropVec. Ideja je, že chceme být performantní, takže než představujeme každou elementu, když představujeme věcí, tak to představujeme nějakým globálním představováním a pak to všechno představujeme následně. A nějaká nezastavována časť v budoucnosti, protože představování v batchu je možným, než představování a pak představujeme všechny elementy toho představování a pak to představujeme nějakým globálním představováním.
+
+To není důležité. Takže ten kód je zhruba a důležitost je, že pokud ten T je nějaký typ, který není státický, ten typ představuje nějakou referencu. Představujte, že představuje mutování reference do TCP.
+
+A pokud ten typ bude představován, to bude představováno do TCP. Takže ta mutována reference není důležitá když ten představování představuje představování. Takže tady je představování o tom, že kód je zhruba.
+
+Kód je zhruba, že T musí představovat státický, jinak to není důležité. Když máte zhruba, to není jen o tom, že kód je představován v zhrubném bloku, to není jen o tom, že kód je představován v zhrubném bloku. Musíte auditovat zhruba v každém modulu, který představuje zhruba.
+
+Tady je další představování, které mnoha z vás mohli slyšet. Toto je zhruba macro. Vytvořil jsem ji z kratky MemOffset.
+
+Je to trošku komplikovanější, ale to je vůbec ten kód. Takže tady vytvoříme nějakou neinitializovanou zhrubu. Vytvoříme MaybeOnIt, protože vědíme, že je to důležité říct kompiláři, že nebudeme ji vytvořit, protože ještě neinitializovaná.
+
+Vytvoříme pojter na začátek zhruby. Tady vytvoříme referenci na podstatu z initializovaného zhruby a vytvoříme ho na pojter. Tady nemusíme vytvořit pojter.
+
+Vytvoříme pojter na začátek zhruby. A pak vytvoříme pojter na podstatu z initializovaného zhruby jako rozdíl mezi dva pojtery. Problém je to, že tato zhruba je repropaktní.
+
+Když je repropaktní, to znamená, že nebude společnosti mezi zhruby. To znamená, že ty zhruby nebudou společnosti mezi zhruby. Takže když máte normálně U64 v zhrubě, to bude společnost mezi zhruby mezi zhruby.
+
+Samozřejmě Boolean bude společnosti mezi zhruby, U16 bude společnosti mezi zhruby. Zhruba znamená, že každá zhruba je společná. Znamená to společnost mezi zhruby mezi zhruby.
+
+Znamená to společnost mezi zhruby mezi zhruby. Znamená to společnost mezi zhruby. Znamená to společnost mezi zhruby mezi zhruby.
+
+Znamená to společnost mezi zhruby mezi zhruby mezi zhruby. Znamená to společnost mezi zhruby mezi zhruby Znamená to společnost zhruby mezi zhruby mezi zhruby media možná jsem to takhle hodně auditoval, protože to nikdo nemůže dostat. Nikdo nemůže to použít, nikdo nemůže to vzniknout externě, takže to je v pořádku. 
+
+A to není pravda. První způsobem je to, že safecode v tomto samém modulu jako i unsafecode, jak to viděli jsme, může mít způsob na bezpečnost unsafecode. A část z těchto příležitostí je, že v safecode v tomto samém modulu můžete dostat způsoby jako privátní záležitosti.
+
+A unsafecode může záležit na integritě těch záležitostí, ale nemůže to říci, takže safecode může záležitým záležitým záležitým záležitým záležitým záležitým záležitým záležitým záležitým záležitým záležitým záležitým záležitým záležitým záležitým záležitým záležitým záležitým všichni ty záležitosti, pro které je potřeba unsafe, ale je to hodně těžké, abychom měli unsafecode pravděpodobně, takže můžeme jen odstoupit a domů jít a vrátit se do UC nebo do Java nebo něco takového. A tohle není záležité. Je totálně možné napisat pravděpodobně unsafecode.
+
+Je tu velmi prostá ceklista. První, běžte si jistí, že potřebujete unsafecode. A druhý, běžte si hodně jistí.
+
+A třetí, ležte na Namikonu. Namikon je takový ruský knih, ale pro unsafe. Dokumentuje hodně toho, co jsem tady říkal a hodně víc, co musíte vědět, abychom mohli napisat pravděpodobně unsafecode.
+
+Uvěřte si, že to musíte představovat záležitě od začátku do záležitosti. A pak běžte hodně očištění. Když napisujete unsafecode, počkejte se na to, když napisujete unsafekeyword, musíte se představovat o tom, co to znamená.
+
+A počkejte se na další kod v tomto samém modulu. Představujte také, abyste dokumentovali všechny vaše unsafe bloky. Není to jen unsafefunctions a tak, ale i všechny unsafe bloky.
+
+Počkejte se na to s komentářem, který přijde s nazvem safety, a vytvořte, proč je ten kod úspěšný. To se vám zůstane hodně nebezpečný, když čtyři lety počkejte, proč je ten kod úspěšný. Nebo když dostanete kontributoře do vašeho projektu, kdo musí vytvořit, jestli to je úspěšné, protože někdo vytvořil kod.
+
+Představujem, abyste vytvořili CI pro vaše projekt, který vytvoří Miri a Adro sanitizátor. Jsou to dvě relativně příjemné vytvořené projekty pro Rust. Všichni jsou hodně představující.
+
+Chtěl bych představit, když se přijde o Miri, protože Miri je fantastický návrh. Miri je interpretářem pro Miru, který je interpretování místa, nebo reprezentace, kterou má Rust. Představujeme, abychom mohli vytvořit kod pro Rust.
+
+Můžeme vytvořit kod pro Rust, když jsme jsme v kontextu kompilátora, a to děláme způsobem, když jsme vytvořili všechno způsobí. To znamená, že kod nemůže dělat nic neskutečného. Můžeme vytvořit kod, vytvořit test nebo něco takového a určitě, abychom mohli představit, že každá reference, která je vytvořená, a všechny ty další věci, o kterých jsme mluvili.
+
+A to i funguje na závěrku. Na závěrku Rustu můžete kliknout malý klik, a pak vytvořit Miri, a to pomohl vytvořit všechno kodu. Představujeme, když jsme vytvořili způsob kodu na závěrku.
+
+Vytvořili jsme závěr, který jsme vytvořili způsobem, který nemůže dělat nic neskutečného. Vytvořili jsme Miri a Miri říká, že to není v pohodě, když vytvořili způsob kodu na závěrku. Vytvořili jsme Miri a Miri říká, že to není v pohodě, když vytvořili způsob kodu na závěrku.
+
+že to není v pohodě, když vytvořili způsob kodu na závěrku. Vytvořili jsme Miri a Miri říká, že to není v pohodě, když vytvořili způsob kodu na závěrku. Vytvořili jsme Miri a Miri říká, že to není v pohodě, když vytvořili způsob kodu na závěrku.
+
+když vytvořili způsob kodu na závěrku. A to je všechno, co mám. A to je všechno, co mám.
+
+Pytání. Pytání. Pytání.
+
+Pytání. Pytání. Pytání.
+
+Pytání. Pytání. Pytání.
+
+Pytání. ま rozlovně nezbaventi kodu s jiným zakloutelem. To povedete jako? Alespoň nezabavití kodu, co nedramaticalně představuje proto, že takova růská akce nekellí frazka.
+
+Pytání. Pytání. Pytání.
+
+dvě kategorie nejsou celkově přesnávávání. Není to v pohodě. Díta, která se nesynchronizuje, je nesynchronizující.
+
+Otázka. Toto je zbytečná, ale v spolupráci jsme napisali několik papirů, které se týkají, že tréninky jsou vládní, že typové instance jsou vládní, že vlády jsou vládní, která se může vytvořit, když máme zvědčenou vládnu, než vládnu, kterou můžete představit v dátních instancech. Je tu někdo, který pracuje na nějaké takové strategie pro Rust? Většinou projekt Rust Belt chtějí pomoci zvědčit nebezpečné bloky, ale to je něco jiné než zvědčit zvědčené vlády.
+
+Přesně znovu tvoje otázku. Otázka je, že byly třeba několik zážitek na zvědčení, že některé vládnice jsou vládní, v tom smyslu, že jim představují vládnu. Některé vládnice, jako Ord a Eat, vlastně dějí něco zvědčitého a pravděpodobného.
+
+A otázka je, jestli máte něco takového, můžete-li vzít záležití na tom v svojej vývoji? A druhá otázka je, je tady takový zážitek pro Rust? Takže, nebo můžete vzít záležití na tom, možná. Moje otázka je, určitě v Btremapu jsem jistý, že jsou třeba vlády, které musí dělat něco trošku hrozného, protože, pokud vláda neužívala Ord pravděpodobně, nevím, jaké optimizace můžete udělat, ale může to být možné vytvořit nějaký záležitý zážitek na vývoji. Nemyslím se.
+
+Jako pro záležitosti v Rustu to dělat, nevím jaké. Může to být, ale moje otázka je také, že s něčím jako Rust Belt Rust byste to nějak dostali, protože pokud vytvoříte pravděpodobně záležitý záležitý zážitek na vývoji, tak už máte hodně silné záležitosti. Protože to je víc o záležitosti.
+
+Takže co by měli udělat, by měli ukazovat, že pokud nebyla Ord vývojící, by nebyla vývojící záležitosti, tak kouzelní záležitosti by nebyla vývojící vývojící záležitosti. Super. Děkuji všem.
+
+(Transcribed by TurboScribe. Go Unlimited to remove this message.)

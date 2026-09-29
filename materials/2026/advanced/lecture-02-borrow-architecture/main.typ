@@ -5,7 +5,7 @@
   aspect-ratio: "16-9",
   footer: self => [Advanced Rust 2026 · Lecture 2],
   config-info(
-    title: [Advanced Rust (2026): Borrow Checker, Lifetimes, Variance],
+    title: [Advanced Rust (2026): Borrow Checker],
     subtitle: [Lecture 2],
     author: [Lukáš Hozda],
     institution: [MFF CUNI],

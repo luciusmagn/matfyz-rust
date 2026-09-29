@@ -1,0 +1,7 @@
+|
+1
+only|row
+3
+count x
+bad
+get 0 1

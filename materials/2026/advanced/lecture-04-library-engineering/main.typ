@@ -5,7 +5,7 @@
   aspect-ratio: "16-9",
   footer: self => [Advanced Rust 2026 · Lecture 4],
   config-info(
-    title: [Advanced Rust (2026): Library Engineering, Testing],
+    title: [Advanced Rust (2026): Libraries and Testing],
     subtitle: [Lecture 4],
     author: [Lukáš Hozda],
     institution: [MFF CUNI],
@@ -15,214 +15,327 @@
 
 #title-slide()
 
-= Library Contract Design
+= General Principles
 
-== Public API is a Stability Boundary
-- `pub` items define compatibility contract.
-- Internal refactors are free only behind stable behavior.
-- Every exported type/trait/error participates in semver surface.
+== Writing Libraries
+- A library is judged mainly by its interface and long-term behavior #pause
+- Internals matter, but callers mostly see consistency, reliability, and documentation #pause
+- Bad API decisions survive much longer than bad internal code
 
-== Layered Architecture
-- Core: pure deterministic domain logic.
-- Adapters: I/O, parsing formats, OS/runtime integration.
-- Facade: ergonomic API over core + adapters.
+== Consistency
+- Similar things should be done the same way #pause
+- Naming, ownership style, error handling, and mutability conventions should line up #pause
+- Inconsistency forces users to memorize special cases
 
-== Why Deterministic Core Matters
-- Easier tests.
-- Easier benchmarking.
-- Easier cross-platform behavior guarantees.
+== Consistency Example
+- Suppose we expose a `Fraction` type #pause
+- Bad design: `add` and `subtract` return new values, but `multiply` and `divide` mutate in place #pause
+- Good design: all arithmetic operations follow one coherent model #pause
+- In Rust, users expect behavior to resemble primitive operators where possible
 
-== Constructor Taxonomy
-- `new`: cheap, obvious, infallible defaults.
-- `try_new`: validation and fallible setup.
-- Builder: many optional knobs and invariants.
+== API Stability
+- Public types, traits, functions, constants, and modules form the API #pause
+- Internal rewrites are cheap only if the public surface is narrow enough #pause
+- Good library design is partly about leaving room for future change
 
+== SemVer
+- Cargo understands semantic versioning #pause
+- In practice, users rely on compatible upgrades not breaking their code #pause
+- Breaking changes are sometimes necessary, but they should not be casual
+
+== Encapsulation
+- Hide internal representation unless exposing it is truly necessary #pause
+- Prefer private fields and explicit constructors or methods #pause
+- Hidden representation improves safety, refactoring freedom, and invariants
+
+== Ease of Use
+- Library should be easy to start with #pause
+- Library should also be hard to misuse #pause
+- Good defaults, clear types, and small API surface help more than slogans about ergonomics
+
+= Rust Library Design
+
+== Rust Style
+- Idiomatic Rust is usually the path of least resistance once the design is sound #pause
+- Rust pushes strongly toward explicit ownership, small interfaces, and trait-based reuse #pause
+- Fighting the language is usually a sign of design mismatch
+
+== Documentation and Tests
+- In Rust, documentation examples can be executable tests #pause
+- This is useful because it checks that the documented usage still compiles and runs #pause
+- Documentation quality directly affects API quality
+
+== Doc Tests
 ```rust
-pub struct Parser {
-    limit: usize,
-}
+/// # Examples
+/// let mut vec = Vec::with_capacity(3);
+/// vec.push(1);
+/// vec.push(2);
+/// assert_eq!(vec.len(), 2);
+```
 
-impl Parser {
-    pub fn new() -> Self { Self { limit: 1024 } }
-    pub fn try_with_limit(limit: usize) -> Result<Self, ConfigError> {
-        if limit == 0 { return Err(ConfigError::ZeroLimit); }
-        Ok(Self { limit })
+== Doc-Test Notes
+- `cargo test` runs doctests too #pause
+- Use `#` to hide support lines in examples #pause
+- Use `no_run` when the code should compile but not execute #pause
+- `#![deny(missing_docs)]` is reasonable for real libraries
+
+== Standard Crate Layout
+```text
+.
+|-- Cargo.toml
+|-- benches
+|-- examples
+|-- src
+|   |-- bin
+|   |-- lib.rs
+|   `-- main.rs
+`-- tests
+```
+
+== Make Illegal States Unrepresentable
+- Type system should rule out nonsense where practical #pause
+- This is one of Rust's biggest strengths #pause
+- If invalid states are easy to construct, the API is weak
+
+== Stringly Typed API
+```rust
+use chrono::{DateTime, Utc, Weekday};
+
+fn is_matching_day(datetime: DateTime<Utc>, day: &str) -> bool {
+    let weekday = datetime.weekday();
+    match day.to_lowercase().as_str() {
+        "monday" => weekday == Weekday::Mon,
+        "tuesday" => weekday == Weekday::Tue,
+        "wednesday" => weekday == Weekday::Wed,
+```
+==
+```rust
+        "thursday" => weekday == Weekday::Thu,
+        "friday" => weekday == Weekday::Fri,
+        "saturday" => weekday == Weekday::Sat,
+        "sunday" => weekday == Weekday::Sun,
+        _ => unreachable!("there are only seven days in a week"),
     }
 }
 ```
 
-== Error Surface Strategy
-- Domain-level error enum for callers.
-- Preserve source error context where useful.
-- Avoid leaking unrelated third-party error types.
-
+== Why This Is Bad
 ```rust
-#[derive(Debug)]
-pub enum LoadError {
-    Io(std::io::Error),
-    InvalidHeader,
-    InvalidRecord(usize),
+let is_tuesday = is_matching_day(
+    some_date,
+    "If you ask Rick Astley for a copy of the movie UP, he cannot give you it",
+);
+```
+- Random strings are the wrong representation of a finite domain #pause
+- The fix is not better validation text, but a better type #pause
+- Enum is the natural model here
+
+== Builder Pattern
+- Rust has neither default parameters nor variadic functions in the C++ sense #pause
+- Builder pattern is common for large configurable constructors #pause
+- It also hides internal representation and allows validation at `build`
+
+== Builder Example
+```rust
+fn main() {
+    let car = CarBuilder::new("Toyota", "Corolla")
+        .year(2020)
+        .color(Color::Blue)
+        .automatic(true)
+        .build();
+
+    println!("{:#?}", car);
 }
 ```
 
-== `thiserror`-Style Ergonomics
-- Derive-based error display can reduce boilerplate.
-- Keep variant taxonomy conceptual, not implementation-specific.
-- `From` conversions should not erase meaning.
+== Builder Notes
+- Typical shape: `new` then chained setters then `build` #pause
+- Builder methods usually return `Self` or `&mut Self` #pause
+- Session-type builders can enforce ordering constraints through different intermediate types
 
-= Trait and Type System Boundaries
+= Conversion and Trait Design
 
-== Coherence and Orphan Rules
-- Cannot implement foreign trait for foreign type.
-- This shapes extension points for downstream users.
-- Newtype wrappers are the standard escape hatch.
-
-== Newtype Extension Pattern
+== Accept Flexible Input Types
 ```rust
-pub struct Millis(pub u64);
+use std::fs;
+use std::path::Path;
 
-impl std::fmt::Display for Millis {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}ms", self.0)
+fn file_exists(path: &Path) -> bool {
+    fs::metadata(path).is_ok()
+}
+```
+- Works, but it forces callers into one concrete representation
+
+== `AsRef<Path>`
+```rust
+use std::fs;
+use std::path::Path;
+
+fn file_exists<P: AsRef<Path>>(path: P) -> bool {
+    fs::metadata(path.as_ref()).is_ok()
+}
+```
+==
+```rust
+fn main() {
+    let path_str = "./example.txt";
+    println!("{}", file_exists(path_str));
+
+    let path_buf = Path::new("./example.txt").to_path_buf();
+    println!("{}", file_exists(path_buf));
+}
+```
+
+== Useful Conversion Traits
+- `AsRef` and `AsMut` for cheap borrowed conversion #pause
+- `From` and therefore `Into` for value conversion #pause
+- `TryFrom` and `TryInto` for fallible conversion #pause
+- `FromStr` to support `.parse()` on strings
+
+== Useful Traits to Implement
+- `Debug` and often `Display` #pause
+- `Display` and `Error` for error types #pause
+- `Clone`, sometimes `Copy` #pause
+- `PartialEq`, `Eq`, `PartialOrd`, `Ord`, `Hash` where meaningful #pause
+- `Default`, iterator traits, and serde traits where appropriate
+
+== `FromIterator`
+```rust
+struct MyCollection<T> {
+    elements: Vec<T>,
+}
+
+impl<T> FromIterator<T> for MyCollection<T> {
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+        let mut c = MyCollection { elements: Vec::new() };
+```
+==
+```rust
+        for i in iter {
+            c.elements.push(i);
+        }
+        c
+    }
+}
+
+let collected: MyCollection<i32> = vec![1, 2, 3, 4, 5].into_iter().collect();
+```
+
+== Orphan Rules
+- You cannot implement a foreign trait for a foreign type #pause
+- This is Rust's coherence rule at work #pause
+- The usual escape hatch is a newtype wrapper
+
+== Newtype Example
+```rust
+use std::fmt;
+
+pub struct DisplayVec<T>(pub Vec<T>);
+
+impl<T: fmt::Display> fmt::Display for DisplayVec<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let xs: Vec<String> = self.0.iter().map(|e| e.to_string()).collect();
+        write!(f, "[{}]", xs.join(", "))
     }
 }
 ```
 
-== Blanket Impls and Future Breakage
-- Broad impls can block downstream specialization.
-- Adding impl later can become breaking due to coherence conflicts.
-- Be conservative with blanket coverage.
+== Extension Traits
+- Extension traits add methods to existing types in a controlled way #pause
+- Conventionally named `SomethingExt` #pause
+- They are useful when you own the trait but not the target type
 
-== Trait Object vs Generic API
-- Generics: static dispatch, inlining, larger codegen.
-- Trait objects: dynamic dispatch, stable ABI-like boundary.
-- Pick based on performance + extensibility tradeoff.
+= Testing
 
-== `Send + Sync` in Public Types
-- Thread-safe bounds become part of API contract.
-- Internal non-thread-safe field choice can leak into semver.
-- Decide concurrency model early.
+== Test Categories
+- Unit tests sit next to the code and may inspect internals #pause
+- Integration tests live in `tests/` and treat the crate as an external dependency #pause
+- Benchmarks are a different concern again
 
-= Versioning and Evolution
-
-== SemVer-Visible Changes
-- Removing public item is breaking.
-- Changing function signature is breaking.
-- Adding enum variant can break exhaustive matches.
-- Tightening trait bounds can break downstream.
-
-== Non-Exhaustive Enums
-- `#[non_exhaustive]` can preserve forward-compatibility.
-- Tradeoff: callers cannot exhaustively match outside crate.
-
-== Deprecation Workflow
-- Deprecate old API path.
-- Offer migration target with examples.
-- Remove only at major version boundary.
-
-== Feature Flag Design
-- Features must compose coherently.
-- Avoid hidden behavior changes by optional dependency toggles.
-- CI should test meaningful feature combinations.
-
-= Testing Strategy
-
-== Test Layers
-- Unit tests for local invariants.
-- Integration tests for public behavior.
-- End-to-end tests for workflow contracts.
-- Regression tests for previously fixed bugs.
-
-== Golden Output Tests
-- Appropriate for formatters/CLI rendering.
-- Keep fixtures small and reviewable.
-- Document formatting contract explicitly.
-
+== Test Syntax
 ```rust
-#[test]
-fn render_stable() {
-    let out = render_items(&["a", "b"]);
-    assert_eq!(out, "a\nb\n");
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_addition() {
+        let sum = 2 + 2;
+        assert_eq!(sum, 4);
+    }
+```
+==
+```rust
+    #[test]
+    #[should_panic(expected = "assertion failed")]
+    fn test_failure_scenario() {
+        assert!(false, "This test will panic!");
+    }
 }
 ```
 
-== Property Testing
-- Validate algebraic invariants over broad input space.
-- Good for parser/serializer roundtrip laws.
-- Complements, not replaces, example-based tests.
-
-== Fuzzing Role
-- Good for parser robustness and panic discovery.
-- Add corpus from real incidents when possible.
-- Track crashes as regression tests.
-
-== Determinism Under Parallelism
-- Public API should state ordering guarantees.
-- If non-deterministic, API must document it explicitly.
-- Tests should verify exactly promised determinism level.
-
-== Time and Flakiness
-- Avoid wall-clock assertions when possible.
-- Use deterministic schedulers/mocks where practical.
-- CI flake budget should be effectively zero.
-
-= Documentation as Engineering Artifact
-
-== Rustdoc Contract Sections
-- `# Panics`
-- `# Errors`
-- `# Safety` (for unsafe-related APIs)
-- `# Examples` with realistic usage
-
-== Executable Examples
-- Doc examples are tests.
-- Keep examples minimal but semantically complete.
-- Include one failure-mode example where useful.
-
-== Invariant Documentation
-- Types should state representation invariants.
-- Methods should state preconditions and postconditions.
-- This reduces ambiguous bug reports.
-
-= Practical Case Study
-
-== Case: Parser + Renderer Crate
-- Core parse model independent from input source.
-- Renderer independent from parse source.
-- IO wrappers at edge.
-
+== `Result`-Returning Tests
 ```rust
-pub fn parse(input: &str) -> Result<Model, ParseError> { /* ... */ # unimplemented!() }
-pub fn render(model: &Model) -> String { /* ... */ # unimplemented!() }
-pub fn load_from_path(path: &std::path::Path) -> Result<Model, LoadError> { /* ... */ # unimplemented!() }
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_division() -> Result<(), String> {
+        let result = 10 / 2;
+        if result == 5 {
+            Ok(())
+```
+==
+```rust
+        } else {
+            Err(String::from("Division result was not as expected"))
+        }
+    }
+}
 ```
 
-== Case: Async API Choice
-- Provide sync core + async wrappers when feasible.
-- Avoid forcing runtime choice into core semantics.
-- Feature-gate runtime integrations explicitly.
+== Dev Dependencies
+- Put test-only and benchmark-only crates into `[dev-dependencies]` #pause
+- Typical examples: `criterion`, proptest, snapshot testing tools #pause
+- Keep library dependencies and test dependencies conceptually separate
 
-== Case: Iterator-Oriented API
-- Returning iterator avoids forced allocation.
-- If stability of iteration order matters, define it.
-- Expose owned collection only when required.
+== Benchmarking
+```rust
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
-= Review Rubric
+fn fibonacci(n: u64) -> u64 {
+    match n {
+        0 => 0,
+        1 => 1,
+        _ => fibonacci(n - 1) + fibonacci(n - 2),
+    }
+}
+```
+==
+```rust
+fn criterion_benchmark(c: &mut Criterion) {
+    c.bench_function("fibonacci 20", |b| b.iter(|| fibonacci(black_box(20))));
+}
 
-== API Review Questions
-- What is stable contract here?
-- What can change without major version bump?
-- Is error taxonomy domain-based?
-- Are trait bounds minimal and justified?
+criterion_group!(benches, criterion_benchmark);
+criterion_main!(benches);
+```
 
-== Test Review Questions
-- Which invariants are untested?
-- Are regressions encoded as tests?
-- Are nondeterministic elements controlled?
-- Is failure output diagnostic enough?
+= Maintenance
 
-== Final Rules
-- Contract clarity beats clever type tricks.
-- Core determinism first, adapters second.
-- Test design is part of API design.
-- If migration story is unclear, API is not ready.
+== Maintenance Tools
+- `rustfmt` for formatting #pause
+- `clippy` for linting #pause
+- CI should run both automatically #pause
+- Publishing code with warnings is usually a bad sign
+
+== Warnings and Checks
+- `#![deny(warnings)]` is common in library code #pause
+- You can enable additional compiler and clippy lints #pause
+- Other useful tools: `cargo-machete`, `cargo-outdated`, `cargo-llvm-cov`, `cargo-tarpaulin`
+
+== Summary
+- Keep API small, consistent, and type-driven #pause
+- Integrate with standard traits where it helps #pause
+- Write tests and documentation as part of the design process #pause
+- Use tooling so maintenance is not left to memory
+
+= Questions?

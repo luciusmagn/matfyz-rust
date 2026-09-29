@@ -1,8 +1,0 @@
-ok
-10
-ok
-full
-20
-10
-empty
-size=0

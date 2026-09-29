@@ -1,0 +1,4 @@
+len=3 empty=false
+first=Some(10)
+missing=None
+checksum=140

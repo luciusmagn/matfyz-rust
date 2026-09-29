@@ -1,0 +1,7 @@
+[package]
+name = "advanced-lab-06-systems-interfaces"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+libc = "0.2"

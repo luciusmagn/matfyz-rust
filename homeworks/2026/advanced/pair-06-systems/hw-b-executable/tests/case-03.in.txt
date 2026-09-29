@@ -1,5 +1,0 @@
-4
-
-a b c
-TRACE hi
-ERROR x

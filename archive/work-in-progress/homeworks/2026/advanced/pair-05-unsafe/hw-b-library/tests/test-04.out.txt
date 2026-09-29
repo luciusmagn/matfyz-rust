@@ -1,0 +1,2 @@
+zst=ZeroSizedType
+empty_u8=true

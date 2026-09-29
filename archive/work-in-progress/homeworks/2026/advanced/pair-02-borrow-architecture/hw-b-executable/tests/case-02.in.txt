@@ -1,0 +1,9 @@
+;
+3
+n0;n1;n2
+x0;x1
+a;b;c;d
+3
+zip 0 1
+zip 1 2
+count 2

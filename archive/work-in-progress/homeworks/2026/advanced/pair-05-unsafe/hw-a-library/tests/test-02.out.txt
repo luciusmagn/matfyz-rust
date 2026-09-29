@@ -1,0 +1,5 @@
+["a", "bb!", "ccc"]
+Some("ccc")
+Some("bb!")
+Some("a")
+None

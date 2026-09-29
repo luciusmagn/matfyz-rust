@@ -1,4 +1,0 @@
-full
-empty
-empty
-size=0

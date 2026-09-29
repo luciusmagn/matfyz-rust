@@ -1,0 +1,3 @@
+first=Ok(())
+now=Err(Timeout)
+later=Ok(())

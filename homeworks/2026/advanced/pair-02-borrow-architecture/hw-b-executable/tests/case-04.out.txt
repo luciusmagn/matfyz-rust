@@ -1,3 +1,0 @@
-x=<missing>
-y=<missing>
-found=0 missing=2

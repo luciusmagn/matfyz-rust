@@ -1,3 +1,0 @@
-Some(12)
-Some(6)
-None

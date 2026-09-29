@@ -97,7 +97,7 @@
          :lecture-dir "materials/2026/advanced/lecture-03-macros"
          :lab-dir "materials/2026/advanced/lab-03-macros"
          :hw-a "homeworks/2026/advanced/pair-03-macros/hw-a-library/README.md"
-         :hw-b "homeworks/2026/advanced/pair-03-macros/hw-b-executable/README.md"
+         :hw-b "homeworks/2026/advanced/pair-03-macros/hw-b-library/README.md"
          :summary "`macro_rules!` pattern design, repetition, hygiene, and diagnostics."
          :snippet "macro_rules! sum {\n    ($first:expr $(, $rest:expr)*) => {{ let mut acc = $first; $(acc += $rest;)* acc }};\n}")
    (list :id "L4"

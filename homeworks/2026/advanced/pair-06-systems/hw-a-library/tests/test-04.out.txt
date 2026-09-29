@@ -1,2 +1,0 @@
-("/tmp/archive.tar", Some("gz"))
-(".gitignore", None)

@@ -15,40 +15,50 @@
 
 #title-slide()
 
-= Measurement Discipline
+= Measurement
 
-== Performance Claim Standard
-- Claim must include measurement method.
-- Claim must include workload definition.
-- Claim must include environment details.
-- Claim without these is anecdote.
+== Performance Claims
+- A performance claim without workload, method, and environment is anecdote #pause
+- Throughput, latency, memory use, and tail behavior are different metrics #pause
+- Optimization begins with a question, not with code motion
 
-== Optimization Workflow
-- Form hypothesis.
-- Measure baseline.
-- Apply one change.
-- Re-measure and compare.
-- Keep regression notes.
+== What Must Be Reported
+- Input shape and size #pause
+- Rust version, target, and build mode #pause
+- Machine characteristics that matter #pause
+- Number of runs and observed variance
 
-== Noise Sources
-- CPU frequency scaling.
-- Scheduler interference.
-- Warmup effects and cache state.
-- Input-size mismatch with production.
-
-== Benchmark Build Mode
-- Debug benchmarks are almost always misleading.
-- Use release with representative compiler flags.
-- Track Rust version and target triple.
-
-= Benchmark Tooling
-
-== Criterion Basics
-- Statistical benchmarking with warmup and sampling.
-- Better than ad-hoc `Instant` loop for microbenchmarks.
-
+== Microbenchmark Pitfall
 ```rust
-use criterion::{Criterion, black_box};
+use std::time::Instant;
+
+let start = Instant::now();
+let result = compute();
+let elapsed = start.elapsed();
+println!("{result} in {elapsed:?}");
+```
+- This is often too noisy to tell you anything useful #pause
+- Single-run timing is almost never enough
+
+== Release Mode
+- Benchmarking debug builds is usually pointless #pause
+- Optimizer changes both absolute speed and code shape #pause
+- Build mode is part of the experiment
+
+== `black_box`
+```rust
+use std::hint::black_box;
+
+let x = black_box(20_u64);
+let y = fibonacci(x);
+black_box(y);
+```
+- `black_box` helps stop the optimizer from deleting the benchmarked work #pause
+- It does not magically make the benchmark realistic
+
+== Criterion
+```rust
+use criterion::{black_box, Criterion};
 
 fn bench_sum(c: &mut Criterion) {
     let xs: Vec<i64> = (0..100_000).collect();
@@ -57,132 +67,159 @@ fn bench_sum(c: &mut Criterion) {
     });
 }
 ```
+- Criterion handles warmup, repeated sampling, and statistics for you
 
-== `black_box` Role
-- Prevents optimizer from removing dead computations.
-- Does not simulate realistic pipeline context.
-- Use it precisely where elimination risk exists.
-
-== Macro vs End-to-End Benchmarks
-- Microbenchmark isolates local cost.
-- End-to-end benchmark captures interaction overheads.
-- Need both for reliable decisions.
-
-= CPU and Memory Effects
-
-== Cache Hierarchy Impact
-- Data locality often dominates arithmetic complexity.
-- Contiguous iteration can beat algorithmically similar random access.
-- Cache miss rate must be observed, not guessed.
-
-== False Sharing
-- Independent counters on same cache line can thrash.
-- Contention appears even without lock contention.
-- Align/pad hot independent atomics when needed.
-
-```rust
-#[repr(align(64))]
-struct Padded<T>(T);
-```
-
-== Branch Prediction
-- Highly predictable branches are cheap.
-- Data-dependent unpredictable branches inflate latency.
-- Layout/data transform can outperform branch micro-tuning.
-
-== Allocation Pressure
-- Frequent allocate/free can dominate runtime.
-- Reuse buffers in hot loops.
-- Measure allocator behavior before custom allocator changes.
-
-= Concurrency Performance
-
-== Lock Contention Analysis
-- Lock-free is not automatically faster.
-- Measure critical-section length and contention frequency.
-- Sometimes sharding + reduction beats lock-free complexity.
-
-== Work Distribution
-- Static chunking vs dynamic stealing tradeoff.
-- Static: lower overhead, potential imbalance.
-- Dynamic: better balance, scheduling overhead.
-
-== Backpressure Throughput Tradeoff
-- Unbounded queues maximize throughput short-term.
-- Bounded queues protect memory and tail latency.
-- Queue policy is architectural choice.
+== Benchmark Layers
+- Microbenchmarks isolate local effects #pause
+- End-to-end benchmarks show interaction costs and queueing effects #pause
+- You usually need both
 
 = Profiling
 
 == Sampling Profilers
-- Find where CPU time is spent.
-- Good first pass before micro-optimization.
-- Validate hotspots against intuition.
+- Profilers answer where time is actually going #pause
+- This often contradicts intuition #pause
+- Sampling is usually the first tool, not the last
 
-== Flamegraphs
-- Visualize stack contribution by width.
-- Identify unexpected hot call paths.
-- Useful for inlining/abstraction overhead decisions.
+== Typical Tools
+- `perf` on Linux #pause
+- `cargo flamegraph` as a convenient wrapper #pause
+- `cargo asm` or Compiler Explorer to inspect generated code
+
+== Flamegraph
+- Width corresponds to sampled time #pause
+- Deep stack is not itself a problem #pause
+- Wide unexpected frames are what you look for
 
 == Hardware Counters
-- Cache misses, branch misses, cycles/instructions.
-- Need careful interpretation with workload context.
-- Counters guide hypothesis generation, not final proof alone.
+- Cycles, instructions, cache misses, branch misses #pause
+- Counter values are only meaningful in context of the workload #pause
+- Use them to guide hypotheses, not as standalone truth
 
-= Correctness vs Performance
+= CPU and Memory Effects
 
-== Guardrail Principle
-- Never weaken correctness invariant without proof.
-- Optimize representation and algorithm first.
-- Weaken atomics/orderings only with explicit memory-model argument.
+== Cache Locality
+- Contiguous access patterns often beat clever pointer-heavy structures #pause
+- Big-O notation says nothing about cache misses #pause
+- Data layout is part of algorithm design
 
-== SeqCst-to-RA Transition Pattern
-- Start with strongest ordering for correctness.
-- Validate behavior and tests.
-- Weaken to Release/Acquire only with proof and benchmarks.
+== Allocation Pressure
+- Repeated allocation can dominate hot paths #pause
+- Reusing buffers and reserving capacity can matter more than arithmetic tweaks #pause
+- Measure allocator behavior before rewriting everything around arenas
 
-== Benchmark Reproducibility
-- Commit benchmark code.
-- Store baseline artifact/summary in repo or CI artifacts.
-- Re-run on regressions with same methodology.
+== Branch Prediction
+- Predictable branches are cheap #pause
+- Highly data-dependent branches can stall pipelines #pause
+- Table layout or data transformation can beat branch micro-tuning
 
-= Case Studies
+== False Sharing
+```rust
+use std::sync::atomic::AtomicU64;
 
-== Case: Parser Throughput
-- Baseline with naive split/alloc pattern.
-- Optimize with borrowed slices and pre-allocated output.
-- Measure speedup and memory impact separately.
+#[repr(align(64))]
+struct PaddedCounter(AtomicU64);
+```
+- Independent variables on the same cache line can still fight each other #pause
+- This is a hardware effect, not a logical data-race issue
 
-== Case: Concurrent Counter
-- Compare mutex, sharded mutex, atomic relaxed.
-- Report throughput under 1, 2, 4, 8, 16 threads.
-- Explain why winner changes by contention regime.
+= Concurrency Performance
 
-== Case: Channel Pipeline
-- Stage imbalance can hide in average throughput.
-- Measure queue depths and per-stage latency.
-- Fix bottleneck before global tuning.
+== Lock Contention
+- Lock-free is not automatically faster #pause
+- Contention frequency and critical-section length matter more than slogans #pause
+- Sharding often beats global locking and also beats overcomplicated lock-free code
+
+== Sharded Counter Shape
+```rust
+use std::sync::atomic::{AtomicU64, Ordering};
+
+struct Sharded {
+    shards: Vec<AtomicU64>,
+}
+
+impl Sharded {
+    fn inc(&self, shard: usize) {
+        self.shards[shard].fetch_add(1, Ordering::Relaxed);
+    }
+}
+```
+
+== Queue Bounds
+- Unbounded queues can convert bursty load into memory blow-up #pause
+- Bounded queues impose backpressure explicitly #pause
+- Queue policy is part of system correctness, not just throughput tuning
+
+== Static vs Dynamic Work Distribution
+- Static chunking has low scheduling overhead #pause
+- Dynamic stealing handles imbalance better #pause
+- Which one wins depends on task variance
+
+= Instrumentation
+
+== Metrics
+- Benchmarks tell you what happens in controlled runs #pause
+- Metrics tell you what happens in long-running real systems #pause
+- These are different tools for different questions
+
+== Prometheus Counter
+```rust
+use prometheus::{Counter, Opts, Registry};
+
+let counter_opts = Opts::new("my_counter", "A counter for tracking events");
+let counter = Counter::with_opts(counter_opts).unwrap();
+let registry = Registry::new();
+registry.register(Box::new(counter.clone())).unwrap();
+counter.inc();
+```
+
+== Prometheus Gauge
+```rust
+use prometheus::{Gauge, Opts, Registry};
+
+let gauge_opts = Opts::new("my_gauge", "A gauge for tracking a value");
+let gauge = Gauge::with_opts(gauge_opts).unwrap();
+let registry = Registry::new();
+registry.register(Box::new(gauge.clone())).unwrap();
+gauge.set(10.0);
+```
+
+== Histograms and Labels
+- Histograms are the usual tool for latency distributions #pause
+- Labels are useful and dangerous #pause
+- High-cardinality labels can destroy your metrics backend
+
+== Instrumentation Discipline
+- Instrument critical paths, not everything that moves #pause
+- Avoid emitting metrics whose meaning is unclear #pause
+- A cheap, stable metric is better than an expensive decorative one
 
 = Reporting
 
-== Performance Report Template
-- Problem statement.
-- Environment and versions.
-- Workload definition.
-- Baseline metrics.
-- Change and rationale.
-- New metrics + confidence.
-- Risks and follow-up.
+== Reproducibility
+- Commit benchmark code #pause
+- Keep inputs or generators under version control #pause
+- Write down command lines and environment assumptions #pause
+- Otherwise nobody can tell whether the speedup is real
 
-== Red Flags in Reports
-- Only one run.
-- No variance.
-- No environment details.
-- No code/data availability.
-- No mention of correctness checks.
+== Comparison Table
+- Baseline #pause
+- Changed version #pause
+- Absolute numbers #pause
+- Relative change #pause
+- Confidence or variance estimate
 
-== Final Rules
-- Measurement quality is part of engineering quality.
-- Profile first, optimize second.
-- Prefer simple fast-enough design over fragile peak benchmark wins.
-- Keep optimization arguments reviewable and reproducible.
+== Common Failure Modes
+- Only one run #pause
+- No warmup #pause
+- Debug build #pause
+- No correctness check after optimization #pause
+- Benchmark optimized away
+
+== Summary
+- Measure before and after, not only after #pause
+- Profile before guessing #pause
+- Treat cache, allocation, contention, and queueing as first-class effects #pause
+- Production metrics and offline benchmarks complement each other
+
+= Questions?

@@ -1,6 +1,0 @@
-1
-4
-hello
-push 9
-hello
-peek

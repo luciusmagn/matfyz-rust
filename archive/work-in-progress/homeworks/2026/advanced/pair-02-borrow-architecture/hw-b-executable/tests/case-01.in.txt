@@ -1,0 +1,11 @@
+|
+3
+alpha|beta|gamma
+x||z
+solo
+5
+count 0
+get 1 1
+get 1 5
+longest 0
+longest 9

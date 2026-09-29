@@ -1,5 +1,0 @@
-empty
-ok
-empty
-9
-size=1

@@ -1,0 +1,2 @@
+after_pop=4
+after_drop=7

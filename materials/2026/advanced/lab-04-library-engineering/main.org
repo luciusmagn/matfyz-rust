@@ -1,48 +1,240 @@
-#+TITLE: Advanced Rust 2026 - Lab 4: Library API and Test Strategy
+#+TITLE: Advanced Rust 2026 - Lab 4: Async Rate Limiter Library
 #+AUTHOR: Lukáš Hozda
 #+DATE: Spring 2026
 
-* Lab Goals
+* Introduction
 
-1. Design public APIs with stable contracts.
-2. Build layered tests (unit + integration + regression).
-3. Prepare for homework pair A4.
+In this lab, you will build a small async Rust library rather than a one-off program.
+The point is not only to make it work, but to make the public API tolerable to use,
+test, and extend.
 
-* Time Plan (90 min)
+The concrete task is an async rate limiter. This is a realistic library-shaped problem:
+there is shared state, concurrent access, waiting, time-based logic, and a small registry
+layer on top.
 
-1. 15 min - API review warm-up
-2. 20 min - exercise 1 (error surface design)
-3. 20 min - exercise 2 (golden-output tests)
-4. 20 min - exercise 3 (property-style checks)
-5. 15 min - review and migration notes
+* Setup
 
-* Exercise 1: Error Surface
+1. Create a new library project: ~cargo new --lib async_rate_limiter~
+2. Add Tokio to your dependencies. A minimal setup is enough:
 
-Given parser code with `anyhow::Error` leaks, redesign it to:
+#+begin_src toml
+[dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "time", "test-util"] }
+#+end_src
 
-1. Use domain enum errors.
-2. Preserve useful source context.
-3. Keep caller-facing API concise.
+You may add further dependencies if you really need them, but this task does not require
+much beyond Tokio and the standard library.
 
-* Exercise 2: Golden Output Contract
+* Exercise: Implement an Async Rate Limiter Library
 
-Create formatter function and tests using fixed expected text files.
+** Objective
 
-Constraints:
+Implement a thread-safe async rate limiter library with:
 
-1. Stable ordering.
-2. Exact formatting.
-3. Deterministic behavior independent of hash map iteration.
+1. a token-bucket limiter
+2. a small registry for named limiters
+3. tests and rustdoc comments for the public API
 
-* Exercise 3: Invariant Checks
+The goal is deliberately library-oriented rather than application-oriented.
 
-Write test helpers asserting invariants:
+** Required API
 
-1. parse + serialize roundtrip stability
-2. stable sort order
-3. clear behavior on empty input
+#+begin_src rust
+use std::sync::Arc;
+use std::time::Duration;
 
-* Debrief
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Error {
+    Timeout,
+    InvalidConfig,
+}
 
-1. Which API choices are semver-sensitive?
-2. Which tests protect against accidental behavioral drift?
+pub struct RateLimiter {
+    // implementation details hidden
+}
+
+impl RateLimiter {
+    /// `permits_per_second` must be finite and greater than zero.
+    /// `burst_capacity` must be at least 1.
+    pub fn new(permits_per_second: f64, burst_capacity: u32) -> Result<Self, Error>;
+
+    /// Tries to take one permit immediately.
+    pub fn try_acquire(&self) -> bool;
+
+    /// Waits until a permit becomes available.
+    pub async fn acquire(&self) -> Result<(), Error>;
+
+    /// Waits until a permit becomes available or the timeout expires.
+    pub async fn acquire_timeout(&self, timeout: Duration) -> Result<(), Error>;
+}
+
+pub struct RateLimiterRegistry {
+    // implementation details hidden
+}
+
+impl RateLimiterRegistry {
+    pub fn new() -> Self;
+
+    /// Registers or replaces a limiter under `name` and returns the stored limiter.
+    pub fn register<S: Into<String>>(&self, name: S, limiter: RateLimiter) -> Arc<RateLimiter>;
+
+    pub fn get<S: AsRef<str>>(&self, name: S) -> Option<Arc<RateLimiter>>;
+
+    /// Atomically returns an existing limiter or creates, stores, and returns a new one.
+    pub fn get_or_create<S, F>(&self, name: S, create_fn: F) -> Arc<RateLimiter>
+    where
+        S: Into<String>,
+        F: FnOnce() -> RateLimiter;
+
+    pub fn remove<S: AsRef<str>>(&self, name: S) -> Option<Arc<RateLimiter>>;
+}
+#+end_src
+
+** Semantics to Follow
+
+1. The bucket holds up to ~burst_capacity~ permits.
+2. New limiters start with a full bucket.
+3. Permit refill is continuous over time, not only in whole-second jumps.
+4. ~try_acquire~ must not wait.
+5. ~acquire_timeout~ returns ~Error::Timeout~ if waiting takes too long.
+6. ~register~ replaces an existing limiter of the same name.
+7. ~get_or_create~ must behave atomically with respect to the registry map.
+
+** Hints
+
+1. Use a mutex-protected internal state structure.
+2. Do not hold a mutex guard across an ~.await~.
+3. ~std::sync::Mutex~ is fine here if the critical sections are short and non-awaiting.
+4. Use Tokio time utilities in tests so you can write deterministic time-based tests.
+
+* Example Usage
+
+** Single Rate Limiter
+
+#+begin_src rust
+use async_rate_limiter::RateLimiter;
+use std::time::Duration;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let limiter = RateLimiter::new(5.0, 1)?;
+
+    for i in 0..10 {
+        limiter.acquire().await?;
+        println!("operation {i}");
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+
+    Ok(())
+}
+#+end_src
+
+** Registry Example
+
+#+begin_src rust
+use async_rate_limiter::{RateLimiter, RateLimiterRegistry};
+use std::sync::Arc;
+use std::time::Duration;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let registry = Arc::new(RateLimiterRegistry::new());
+
+    registry.register("login", RateLimiter::new(5.0, 1)?);
+    registry.register("public_api", RateLimiter::new(100.0, 20)?);
+
+    let endpoint_limiter = registry.get("login").unwrap();
+    endpoint_limiter.acquire_timeout(Duration::from_millis(100)).await?;
+
+    Ok(())
+}
+#+end_src
+
+* What To Test
+
+1. burst consumption: a fresh limiter should allow ~burst_capacity~ immediate acquisitions
+2. refill over time: permits should become available again after enough simulated time passes
+3. timeout behavior: waiting should fail when the timeout is too short
+4. registry behavior: insert, replace, get, remove, get_or_create
+
+If you use ~#[tokio::test(start_paused = true)]~, your tests become much easier to reason about.
+
+* Design Notes
+
+This is a library-writing lab, so the API matters.
+
+1. ~try_acquire~ is synchronous on purpose. If it does not wait, it should not be ~async~.
+2. ~new~ is fallible because invalid rate-limiter configuration is a normal input error, not a panic-worthy event.
+3. ~burst_capacity~ is used instead of the older ~max_burst~ wording because the latter was ambiguous.
+4. Combining multiple limiters in a single logical operation is subtle: if one acquisition succeeds and the next fails, you have partially consumed capacity. The simple example above does not solve that problem.
+
+* Skeleton
+
+#+begin_src rust
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
+use tokio::time::{sleep, timeout, Instant};
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Error {
+    Timeout,
+    InvalidConfig,
+}
+
+pub struct RateLimiter {
+    // TODO
+}
+
+struct RateLimiterState {
+    // TODO
+}
+
+impl RateLimiter {
+    pub fn new(permits_per_second: f64, burst_capacity: u32) -> Result<Self, Error> {
+        todo!()
+    }
+
+    pub fn try_acquire(&self) -> bool {
+        todo!()
+    }
+
+    pub async fn acquire(&self) -> Result<(), Error> {
+        todo!()
+    }
+
+    pub async fn acquire_timeout(&self, timeout: Duration) -> Result<(), Error> {
+        todo!()
+    }
+}
+
+pub struct RateLimiterRegistry {
+    // TODO
+}
+
+impl RateLimiterRegistry {
+    pub fn new() -> Self {
+        todo!()
+    }
+
+    pub fn register<S: Into<String>>(&self, name: S, limiter: RateLimiter) -> Arc<RateLimiter> {
+        todo!()
+    }
+
+    pub fn get<S: AsRef<str>>(&self, name: S) -> Option<Arc<RateLimiter>> {
+        todo!()
+    }
+
+    pub fn get_or_create<S, F>(&self, name: S, create_fn: F) -> Arc<RateLimiter>
+    where
+        S: Into<String>,
+        F: FnOnce() -> RateLimiter,
+    {
+        todo!()
+    }
+
+    pub fn remove<S: AsRef<str>>(&self, name: S) -> Option<Arc<RateLimiter>> {
+        todo!()
+    }
+}
+#+end_src

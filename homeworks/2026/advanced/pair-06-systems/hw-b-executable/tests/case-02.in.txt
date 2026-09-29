@@ -1,4 +1,0 @@
-3
-INFO a
-INFO b
-WARN c

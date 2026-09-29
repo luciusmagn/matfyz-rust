@@ -1,5 +1,0 @@
-0
-3
-push 1
-peek
-pop

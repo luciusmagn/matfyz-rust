@@ -1,0 +1,6 @@
+cap=2
+available=2
+a=Ok(())
+b=Ok(())
+c=Err(Timeout)
+empty=true
