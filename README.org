@@ -37,6 +37,16 @@ The server will start on port 27777 by default.
 (matfyz:stop-server)
 #+end_src
 
+** Building the introductory lecture
+
+Run this from the repository root (or any current directory):
+
+#+begin_src bash
+./build.sh
+#+end_src
+
+This rebuilds the HTML and PDF for =materials/2026/basic/introduction/=. See that directory's =README.md= for editing and presentation controls.
+
 * Configuration
 
 Edit ~src/config.lisp~ to customize:
