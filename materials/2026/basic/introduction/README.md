@@ -1,9 +1,21 @@
 # Introduction lecture
 
-Edit `lesson.md`. Its `##` headings mark slides. Mark a Rust code block with `{.rust .runnable}` to add an **Edit and run in Rust Playground** button to the HTML. The PDF contains the original code and the explanation on the following slide.
+Edit `lesson.md`. Use `##` for slide headings, short bullet lists, and fenced code. Keep a blank line before each heading. A Rust block with attributes `{.rust .runnable}` gets a ▶ link at its upper-right corner. Add `data-error="E0502"` (with the appropriate error code) to identify an intentional compile failure in the source.
 
-Run `./build.sh` to rebuild `index.html` and `introduction.pdf`. You need Pandoc and Chromium. Open `index.html` in a browser; use the arrow keys or the on-screen buttons to move between slides.
+Run `./build.sh` to rebuild `index.html` and `introduction.pdf`. You need Pandoc and Chromium.
 
-The HTML opens runnable examples in the Rust Playground, which uses its own current toolchain and requires internet access. For a local demonstration, paste an example into `main.rs` and run `rustup run 1.88.0 rustc --edition=2021 main.rs && ./main`. The two examples that demonstrate rejected programs are meant to produce compiler errors.
+## Presenting
 
-The course details here come from the 2026/27 course page and `course-admin/rust-toolchain-policy.md`. Check the Discord invite and the current assignment deadlines before presenting. The 2025 introduction contains dates and grading details that should not be carried over without confirmation.
+Open `index.html`, reset browser zoom to 100%, and enter browser fullscreen. Navigate with the arrow keys, Space, Page Up/Down, Home, or End. Slides scale as a whole to fit the window, preserving the 16:9 composition on other screen shapes. At 1920×1080, body text is 60px and code is 48px; the relative sizes also apply to the PDF.
+
+Select ▶ to open the example in Rust Playground in a separate tab. Internet access is required there, and its stable compiler may be newer than the course compiler. For a local demonstration, save the code as `main.rs`, then compile with `rustup run 1.88.0 rustc --edition=2021 main.rs` and run the resulting executable.
+
+## Checks
+
+Run `node verify-browser.mjs` after building. With Node 22+ and Chromium, it checks every slide for overflow at 1024×768, 1280×720, 1920×1080, and 3840×2160, plus print bounds, keyboard navigation, and example links. Add `--screenshots` to save three `.preview-*.png` files for inspection.
+
+The 15 runnable examples were checked with Rust 1.88.0: ten compile and run; five produce their annotated error codes. The data-modelling fragment is a type declaration, not a standalone executable.
+
+## Timing and course details
+
+See `teaching-notes.md` for a 90-minute allocation and the mapping from the original introduction.

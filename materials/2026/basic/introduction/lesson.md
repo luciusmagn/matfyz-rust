@@ -1,77 +1,206 @@
 # Programming in Rust · NPRG082
 
-## Introduction
+## Programming in Rust
 
-**Programming in Rust · winter 2026/27**
+- NPRG082 · winter 2026/27
+- Lukáš Hozda
+- [matfyz.lho.sh](https://matfyz.lho.sh)
 
-Rust is a systems language. This lecture explains why it requires us to say who owns data and who may use it. We will compile a few short programs and read the errors.
+## Course organization
 
-## How the course works
+- Lectures and labs, 90 minutes each
+- Six core lecture/lab pairs, plus an extension block
+- Bring a laptop to the labs
+- Visitors welcome; feel free to share the materials
+- [Schedule and course information](https://d3s.mff.cuni.cz/teaching/rust)
 
-- Six lecture/lab pairs, plus an optional extension block.
-- Lectures and labs are 90 minutes each.
-- Each core pair has two ReCodEx homeworks: an executable program and a library.
-- The spring advanced Rust course is separate.
+## Homework
 
-[Course schedule and materials](https://d3s.mff.cuni.cz/teaching/rust) · [Course material hub](https://matfyz.lho.sh)
+- ReCodEx; two assignments per core lecture/lab pair
+- Executable tasks: `main.rs` and permitted extra files
+- Library tasks: `solution.rs`, tested through its API
+- Deadlines and grading: course page and assignment details
+- Rust 1.88.0 for local testing and graded submissions
 
-## Work, submission, help
+## Contacts
 
-- Use Rust 1.88 for graded work. Check with `rustc --version`.
-- Submit `main.rs` for executable tasks and `solution.rs` for library tasks. An assignment may allow additional files.
-- Check the course page and each assignment for deadlines and grading.
-- Bring questions and attempted solutions to the lab. Use the [course Discord](https://discord.gg/E4XpeWbJpx) or contact the instructors.
+- [Course Discord](https://discord.gg/E4XpeWbJpx)
+- [Rust CZ/SK Discord](https://discord.gg/ZPdaXex8)
+- Direct contact with the instructors is also welcome
+- Materials and examples: [matfyz.lho.sh](https://matfyz.lho.sh)
 
-Install Rust before the next class. Check `cargo --version` and `rustc --version`.
+## Course topics
+
+- Ownership, borrowing, and data structures
+- Enums, pattern matching, and error handling
+- Modules, traits, generics, and iterators
+- Threads, synchronization, and asynchronous tasks
+- Library design, testing, and dependencies throughout
+
+## Rust history
+
+- 2006: Graydon Hoare starts the project
+- 2009: Mozilla begins sponsoring development
+- 2015: Rust 1.0
+- 2018: non-lexical lifetimes; 2019: async/await
+- 2021: Rust Foundation
+
+## Language influences
+
+- C++: resource management and zero-overhead abstractions
+- ML-family languages: algebraic data types and matching
+- Haskell: traits have similarities to type classes
+- Cyclone: memory safety in a systems language
+- Earlier Rust also explored Erlang-style concurrency
+
+## Design goals
+
+- Memory safety without a mandatory garbage collector
+- Control over allocation, layout, and resource lifetime
+- Abstractions that can compile to direct machine code
+- Data-race prevention in safe code
+- Interoperation with existing native libraries
 
 ## Resource management
 
-A service reads a message and passes it to another thread. Someone must decide how long the message is kept, whether it can change, and when its storage is released.
+- Manual management: explicit allocation and release
+- Tracing GC: runtime checks which objects are reachable
+- Ownership: a value is responsible for a resource
+- Borrowing: access without taking ownership
+- Rust combines ownership with static checks on access
 
-C and C++ often leave these decisions to the programmer. Garbage collection handles memory reclamation, but it changes the runtime and does not settle all resource or concurrency questions. Rust checks many of these decisions at compile time.
+## Static guarantees
 
-## References and mutation
+- Reject invalid operations before the program runs
+- Check function bodies against their signatures
+- Avoid relying on a caller's undocumented behavior
+- Some safe programs need a different representation
+- Runtime checks where static checks are insufficient
 
-Predict whether this compiles. Then run it. Would reserving extra capacity make a difference?
+## Installing Rust
+
+- Install through [rustup.rs](https://rustup.rs)
+- Linux and macOS: a native linker/toolchain is also needed
+- Windows: Rustup installer and MSVC build tools
+- WSL is an alternative Windows setup
+- Use Rustup to manage compiler versions independently
+
+## Course toolchain
+
+```bash
+rustup toolchain install 1.88.0
+rustup override set 1.88.0
+rustc --version
+cargo --version
+```
+
+- Set the override inside your course directory
+- Use the ReCodEx compiler version for local testing
+- Nightly features only when an assignment requests them
+
+## Editor setup
+
+- VS Code or VSCodium: rust-analyzer
+- Neovim or Emacs: rust-analyzer through an LSP client
+- RustRover is another option
+- CodeLLDB for debugging in VS Code/VSCodium
+- TOML support for `Cargo.toml`
+
+## Standard tools
+
+```bash
+rustup component add rustfmt clippy rust-src
+cargo fmt
+cargo clippy
+cargo test
+cargo doc --open
+```
+
+- Formatting, diagnostics, tests, documentation
+- `rust-src`: standard-library sources for editor support
+
+## Cargo project
+
+```bash
+cargo new demo
+cd demo
+cargo check
+cargo run
+cargo run --release
+```
+
+- `Cargo.toml`: package metadata and dependencies
+- `src/main.rs`: executable entry point
+- Debug: faster compilation; release: optimized execution
+
+## Crates and packages
+
+- Crate: a library or executable compilation unit
+- Package: a `Cargo.toml` and its associated targets
+- One package can contain a library and several executables
+- Modules organize code within a crate
+- Cargo builds the package's dependency graph
+
+## Dependencies
+
+```bash
+cargo add regex
+```
+
+- `std` covers primitives, not every application domain
+- [crates.io](https://crates.io): package registry
+- [docs.rs](https://docs.rs): published API documentation
+- [lib.rs](https://lib.rs): an alternative crate directory
+- Check maintenance, license, and supported Rust version
+
+## First program
 
 ```{.rust .runnable}
 fn main() {
-    let mut values = vec![10, 20, 30];
-    let first = &values[0];
-    values.push(40);
-    println!("{first}");
+    println!("Hello, world!");
 }
 ```
 
+- `fn`: function declaration; `main`: entry point
+- `println!`: macro with compile-time format checking
+- Save as `hello.rs`; compile with `rustc hello.rs`
+- Run `./hello` on Unix or `.\hello.exe` on Windows
 
-## The compiler's rule
-
-**Result:** `push` may move the vector's elements. The compiler rejects mutation while `first` is still needed, even if this particular `push` would not reallocate. A reference into a vector may become invalid when the vector changes.
-
-This rule rejects some programs that would run safely with today's inputs. In exchange, safety does not depend on those inputs or on how much memory the vector happens to have reserved.
-
-Discuss ways to keep access to the first value after `push`.
-
-## Use an index
-
-An index refers to a position, not an address in the vector's allocation.
+## Values and types
 
 ```{.rust .runnable}
 fn main() {
-    let mut values = vec![10, 20, 30];
-    let first_index = 0;
-    values.push(40);
-    println!("{}", values[first_index]);
+    let count: u32 = 42;
+    let ratio: f64 = 0.25;
+    let ready: bool = true;
+    let letter: char = 'λ';
+    println!("{count} {ratio} {ready} {letter}");
 }
 ```
 
-Appending leaves earlier indices unchanged. Inserting or removing an element before that position would change what the index refers to.
+- Static types; many local annotations can be inferred
+- Bindings are immutable unless declared `mut`
 
-## Ownership
+## Basic types
 
-Predict whether both bindings can be used after the assignment. Then run it.
+- Signed integers: `i8` through `i128`
+- Unsigned integers: `u8` through `u128`
+- `isize`, `usize`: pointer-sized integers
+- `f32`, `f64`: floating-point numbers
+- `bool`: one byte; `char`: Unicode scalar value, four bytes
+- `()`: unit, a value with no stored data
 
-```{.rust .runnable}
+## Data representation
+
+- `[T; N]`: fixed-size array stored inline
+- `Vec<T>`: pointer, length, capacity; allocated elements
+- `String`: an owned UTF-8 buffer
+- `&str`: a borrowed UTF-8 view, not a copied string
+- Owning a buffer differs from having a pointer into it
+
+## Assignment of an owned value
+
+```{.rust .runnable data-error="E0382"}
 fn main() {
     let text = String::from("hello");
     let other = text;
@@ -80,16 +209,15 @@ fn main() {
 }
 ```
 
-
 ## Moves
 
-**Result:** `text` cannot be used after the assignment. The `String` moved to `other`; its heap buffer was not copied. Only `other` owns it now.
+- `text` initially owns the string's allocation
+- Assignment transfers ownership to `other`
+- The old binding can no longer be used
+- The string's contents are not implicitly cloned
+- Two independent owners must not free the same allocation
 
-Rust does not make an implicit copy of a value that owns an allocation.
-
-## Copying data
-
-Copying a `String`'s buffer takes time and memory. Copying just its pointer and treating both copies as owners would be invalid.
+## Explicit copying
 
 ```{.rust .runnable}
 fn main() {
@@ -99,46 +227,182 @@ fn main() {
 }
 ```
 
-`clone` makes the copy explicit. When the function only needs to read data, borrowing is often simpler.
+- `clone` copies this string's allocation and contents
+- The strings can now be changed independently
+- Copying is explicit and has a runtime cost
 
 ## Borrowed results
-
-Here the function returns a view into its input rather than allocating a new string.
 
 ```{.rust .runnable}
 fn first_word(input: &str) -> &str {
     input.split_whitespace().next().unwrap_or("")
 }
-
 fn main() {
     let line = String::from("systems programming");
     println!("{}", first_word(&line));
 }
 ```
 
-The returned `&str` is valid while the input's storage is valid. No allocation is needed.
+- The result may refer into the input's allocation
+- Its validity is tied to the input borrow
 
-## Errors as values
+## References and mutation
 
-`port` returns either a number or a parse error.
+```{.rust .runnable data-error="E0502"}
+fn main() {
+    let mut values = vec![10, 20, 30];
+    let first = &values[0];
+    values.push(40);
+    println!("{first}");
+}
+```
+
+## Vector growth
+
+- `push` may allocate a larger buffer and move the elements
+- A reference into the old buffer would become invalid
+- `push` requires exclusive access through `&mut self`
+- `first` is still used after that operation
+- The shared and exclusive access cannot overlap here
+
+## Reserved capacity
+
+```{.rust .runnable data-error="E0502"}
+fn main() {
+    let mut values = Vec::with_capacity(64);
+    values.push(10);
+    let first = &values[0];
+    values.push(20);
+    println!("{first}");
+}
+```
+
+- Still rejected: the access rules do not track spare capacity
+
+## Static checking and API contracts
+
+- Function signatures describe permitted access
+- Callers need not inspect the implementation
+- Safe implementations can change without breaking callers
+- Some valid executions cannot be expressed with this API
+- Alternatives: a different representation, a shorter borrow
+
+## End of a borrow
 
 ```{.rust .runnable}
-fn port(input: &str) -> Result<u16, std::num::ParseIntError> {
-    input.parse()
-}
-
 fn main() {
-    for input in ["8080", "not a number"] {
-        println!("{input:?}: {:?}", port(input));
+    let mut values = vec![10, 20, 30];
+    let first = &values[0];
+    println!("{first}");
+    values.push(40);
+    println!("{values:?}");
+}
+```
+
+- No later use of `first`; its borrow can end before `push`
+
+## Indices instead of references
+
+```{.rust .runnable}
+fn main() {
+    let mut values = vec![10, 20, 30];
+    let index = 0;
+    values.push(40);
+    println!("{}", values[index]);
+}
+```
+
+- Appending preserves earlier indices
+- Insertion or removal before an element shifts its index
+
+## Resource cleanup
+
+- Ownership applies to more than memory
+- `File`: close an owned file handle
+- `MutexGuard`: release a lock when the guard is dropped
+- Cleanup normally follows scope exit, including early returns
+- Leaks are possible; memory safety does not require reclamation
+
+## Absence as a value
+
+```{.rust .runnable}
+fn main() {
+    let values = [10, 20];
+    match values.get(5) {
+        Some(value) => println!("{value}"),
+        None => println!("no element"),
     }
 }
 ```
 
-Rust warns when a `Result` is ignored. The caller can handle the error, propagate it, or explicitly discard it. Panics and logic bugs are still possible.
+- `Option<T>` distinguishes a value from its absence
+- No invalid reference represents the missing element
 
-## Transferring work to a thread
+## Errors as values
 
-`move` transfers ownership of `message` into the thread's closure.
+```{.rust .runnable}
+fn main() {
+    let result = "70000".parse::<u16>();
+    match result {
+        Ok(port) => println!("port {port}"),
+        Err(error) => println!("{error}"),
+    }
+}
+```
+
+- `Result<T, E>` includes the error type in the contract
+- Callers can handle errors or propagate them with `?`
+
+## Error-handling decisions
+
+- Recoverable errors are usually returned as values
+- `?` propagates errors through the function's return type
+- Ignoring a `Result` produces a warning by default
+- `unwrap` can panic; it is an explicit failure policy
+- Types do not prove application behavior correct
+
+## Data modelling
+
+```rust
+enum Connection {
+    Disconnected,
+    Connected { peer: String },
+}
+```
+
+- Different states can contain different data
+- A disconnected connection has no peer field to misuse
+- Exhaustive matching checks that every case is handled
+
+## Exhaustive matching
+
+```{.rust .runnable data-error="E0004"}
+enum State { Stopped, Running }
+fn main() {
+    let state = State::Running;
+    match state {
+        State::Running => println!("running"),
+    }
+}
+```
+
+- Rejected: the `Stopped` case is missing
+- Adding a variant exposes incomplete matches in callers
+
+## Borrowing across a thread boundary
+
+```{.rust .runnable data-error="E0373"}
+fn main() {
+    let message = String::from("work");
+    let handle = std::thread::spawn(|| message.len());
+    println!("{}", handle.join().unwrap());
+}
+```
+
+- `spawn` permits the new thread to outlive the current scope
+- Its closure cannot retain this borrow of a local variable
+
+## Ownership transfer to a thread
 
 ```{.rust .runnable}
 fn main() {
@@ -148,26 +412,74 @@ fn main() {
 }
 ```
 
-The thread can use `message` even if the spawning scope ends. `join` waits for its result. We will cover shared state and synchronization later.
+- The closure now owns `message`
+- `join` waits for completion and returns the result
 
-## Costs and limits
+## Shared state
 
-- Safe Rust prevents memory errors of this kind and makes resource ownership explicit.
-- Static checking sometimes rejects code that would have run safely. You may need to change the data structure or API.
-- Rust does not prevent logic errors or all concurrency errors. `unsafe` code has additional obligations.
+- Ownership transfer avoids shared mutable state
+- Shared ownership is possible, for example with `Arc<T>`
+- Mutation may require a mutex or another synchronization scheme
+- `Send` and `Sync` describe thread-safety properties
+- Data-race freedom does not prevent deadlocks or logic races
 
-## Exercise
+## Abstraction costs
 
-A function returns a reference into a growable buffer. The caller needs to change the buffer while retaining access to an element.
+```{.rust .runnable}
+fn main() {
+    let total: i32 = (1..=100)
+        .map(|n| n * n)
+        .sum();
+    println!("{total}");
+}
+```
 
-- Return a copy of the element if that cost is acceptable.
-- Keep an index if the planned changes preserve the element's position.
-- Finish using the reference before changing the buffer.
+- No intermediate collection is required by this pipeline
+- Iteration and closures can be inlined in optimized builds
 
-Choose one approach and state what the caller may do afterward.
+## Traits and dispatch
 
-## Before next time
+- Traits describe required behavior
+- Generic code can use static dispatch, with code for each type
+- `dyn Trait` permits dynamic dispatch when useful
+- Composition without class-inheritance hierarchies
+- Runtime costs depend on the abstraction chosen
 
-Install Rust 1.88, check `rustc --version` and `cargo --version`, and run one example from this lecture. Bring a compiler error that you did not expect.
+## Runtime costs
 
-Next lecture: ownership and borrowing in more detail.
+- Allocation, cloning, locking, reference counting cost work
+- Bounds checks may remain in generated code
+- Generic instantiations can increase binary size and compile time
+- Debug and release builds can perform very differently
+- Zero-overhead abstraction is not a speed guarantee
+
+## Unsafe code
+
+- Needed for some low-level operations and native interfaces
+- Authors must uphold the operation's safety requirements
+- An `unsafe` block does not disable all compiler checks
+- Safe APIs can encapsulate an unsafe implementation
+- An implementation bug can invalidate its safety claim
+
+## Compiler diagnostics
+
+- Primary error: the operation the compiler rejected
+- Source annotations: related uses and conflicting requirements
+- Error explanations: `rustc --explain E0502`
+- Suggestions are possible changes, not always the right design
+- Short examples separate type rules from application details
+
+## Before the next lab
+
+- Install Rust 1.88.0 and configure your editor
+- Build and run a Cargo project
+- Bring a laptop
+- Course Discord and materials are linked at the start
+
+## References
+
+- [The Rust Programming Language](https://doc.rust-lang.org/book/)
+- [Rust by Example](https://doc.rust-lang.org/rust-by-example/)
+- [Standard library documentation](https://doc.rust-lang.org/std/)
+- [The Cargo Book](https://doc.rust-lang.org/cargo/)
+- [The Rustup Book](https://rust-lang.github.io/rustup/)
