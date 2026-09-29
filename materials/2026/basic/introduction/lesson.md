@@ -1,6 +1,6 @@
 # Programming in Rust · NPRG082
 
-## [Programming in]{.title-prefix} [Rust]{.title-language} {.title-slide}
+## [Rust]{.title-language} {#programming-in-rust .title-slide}
 
 ::: {.title-author}
 Lukáš Hozda

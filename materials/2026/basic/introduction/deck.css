@@ -62,9 +62,8 @@ div.sourceCode:has(.run-code) { padding-top: 38px; }
 }
 .run-code:hover { color: var(--paper); background: var(--ink); }
 .slide-number { position: absolute; right: 60px; bottom: 16px; font-size: 22px; }
-section.title-slide { padding: 80px 90px; }
+section.title-slide { padding: 80px 90px; text-align: center; }
 .title-slide h2 { margin: 44px 0 55px; }
-.title-prefix { display: block; font-size: 64px; font-weight: 400; }
 .title-language { display: block; font-size: 210px; line-height: .94; font-style: italic; letter-spacing: -6px; }
 .title-author { font-size: 42px; }
 .title-term { margin-top: 24px; font: 28px Typewriter, monospace; }
