@@ -1,28 +1,48 @@
 const slides = [...document.querySelectorAll("section.level2")];
 let current = Math.max(0, slides.findIndex(slide => `#${slide.id}` === location.hash));
+const bullets = slides.map(slide => [...slide.querySelectorAll('li')]);
+let revealed = 0;
+
+function reveal(count) {
+  revealed = Math.max(0, Math.min(bullets[current].length, count));
+  bullets[current].forEach((bullet, index) => {
+    const hidden = index >= revealed;
+    bullet.classList.toggle('pending', hidden);
+    bullet.inert = hidden;
+  });
+}
+function advance() {
+  if (revealed < bullets[current].length) reveal(revealed + 1);
+  else if (current < slides.length - 1) show(current + 1);
+}
+function retreat() {
+  if (revealed > 0) reveal(revealed - 1);
+  else if (current > 0) show(current - 1, true);
+}
 
 // Preserve the composition and relative type sizes on any projector resolution.
 function resize() {
   const scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
   document.documentElement.style.setProperty("--slide-scale", scale);
 }
-function show(index) {
+function show(index, complete = false) {
   current = Math.max(0, Math.min(slides.length - 1, index));
   slides.forEach((slide, number) => slide.classList.toggle("active", number === current));
+  reveal(complete ? bullets[current].length : 0);
   history.replaceState(null, "", `#${slides[current].id}`);
 }
 document.addEventListener("keydown", event => {
   if (event.altKey || event.ctrlKey || event.metaKey ||
       event.target.closest("textarea, input, select, [contenteditable]")) return;
-  let index;
-  if (["ArrowRight", "PageDown", " "].includes(event.key)) index = current + 1;
-  if (["ArrowLeft", "PageUp"].includes(event.key)) index = current - 1;
-  if (event.key === "Home") index = 0;
-  if (event.key === "End") index = slides.length - 1;
-  if (index !== undefined) {
+  let action;
+  if (["ArrowRight", "PageDown", " "].includes(event.key)) action = advance;
+  if (["ArrowLeft", "PageUp"].includes(event.key)) action = retreat;
+  if (event.key === "Home") action = () => show(0);
+  if (event.key === "End") action = () => show(slides.length - 1, true);
+  if (action) {
     event.preventDefault();
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
-    show(index);
+    action();
   }
 });
 window.addEventListener("hashchange", () => {

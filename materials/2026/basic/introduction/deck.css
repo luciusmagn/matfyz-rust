@@ -62,6 +62,17 @@ div.sourceCode:has(.run-code) { padding-top: 38px; }
 }
 .run-code:hover { color: var(--paper); background: var(--ink); }
 .slide-number { position: absolute; right: 60px; bottom: 16px; font-size: 22px; }
+section.title-slide { padding: 80px 90px; }
+.title-slide h2 { margin: 44px 0 55px; }
+.title-prefix { display: block; font-size: 64px; font-weight: 400; }
+.title-language { display: block; font-size: 210px; line-height: .94; font-style: italic; letter-spacing: -6px; }
+.title-author { font-size: 42px; }
+.title-term { margin-top: 24px; font: 28px Typewriter, monospace; }
+.title-slide .slide-number { display: none; }
+.contacts-slide > ul { width: 690px; }
+.discord-qr { position: absolute; right: 60px; top: 168px; width: 352px; text-align: center; }
+.discord-qr img { display: block; width: 352px; height: 352px; image-rendering: pixelated; }
+.discord-qr > p + p { margin-top: 16px; font: 23px Typewriter, monospace; }
 @media screen {
   body { overflow: hidden; }
   #deck {
@@ -71,6 +82,7 @@ div.sourceCode:has(.run-code) { padding-top: 38px; }
   }
   section.level2 { display: none; }
   section.level2.active { display: block; }
+  li.pending { visibility: hidden; }
 }
 @media print {
   @page { size: 1280px 720px; margin: 0; }

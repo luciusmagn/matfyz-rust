@@ -1,10 +1,14 @@
 # Programming in Rust · NPRG082
 
-## Programming in Rust
+## [Programming in]{.title-prefix} [Rust]{.title-language} {.title-slide}
 
-- NPRG082 · winter 2026/27
-- Lukáš Hozda
-- [matfyz.lho.sh](https://matfyz.lho.sh)
+::: {.title-author}
+Lukáš Hozda
+:::
+
+::: {.title-term}
+NPRG082 · winter 2026/27
+:::
 
 ## Course organization
 
@@ -22,12 +26,18 @@
 - Deadlines and grading: course page and assignment details
 - Rust 1.88.0 for local testing and graded submissions
 
-## Contacts
+## Contacts {.contacts-slide}
 
 - [Course Discord](https://discord.gg/E4XpeWbJpx)
 - [Rust CZ/SK Discord](https://discord.gg/ZPdaXex8)
 - Direct contact with the instructors is also welcome
 - Materials and examples: [matfyz.lho.sh](https://matfyz.lho.sh)
+
+::: {.discord-qr}
+[![QR code for the course Discord](discord-qr.png)](https://discord.gg/E4XpeWbJpx)
+
+[discord.gg/E4XpeWbJpx](https://discord.gg/E4XpeWbJpx)
+:::
 
 ## Course topics
 

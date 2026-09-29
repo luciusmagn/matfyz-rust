@@ -64,11 +64,11 @@ try {
       const failures = [];
       const scale = Math.min(innerWidth / 1280, innerHeight / 720);
       slides.forEach((slide, index) => {
-        show(index);
+        show(index, true);
         const rect = slide.getBoundingClientRect();
         if (rect.left < -1 || rect.top < -1 || rect.right > innerWidth + 1 || rect.bottom > innerHeight + 1)
           failures.push(slide.id + ': outside viewport');
-        for (const element of slide.querySelectorAll('h2, ul, pre')) {
+        for (const element of slide.querySelectorAll('h2, ul, pre, .discord-qr, .title-author, .title-term')) {
           const box = element.getBoundingClientRect();
           if (box.bottom > rect.top + 670 * scale || box.right > rect.right - 59 * scale)
             failures.push(slide.id + ': content outside safe area');
@@ -93,24 +93,49 @@ try {
   await evaluate('show(0)');
   await call('Input.dispatchKeyEvent', { type: 'keyDown', key: 'ArrowRight', code: 'ArrowRight', windowsVirtualKeyCode: 39 });
   assert.equal(await evaluate('current'), 1);
+  assert.equal(await evaluate('revealed'), 0);
+  const key = async (key, code) => call('Input.dispatchKeyEvent', { type: 'keyDown', key, code: key, windowsVirtualKeyCode: code });
+  const visible = () => evaluate('bullets[current].filter(li => getComputedStyle(li).visibility === "visible").length');
+  const count = await evaluate('bullets[current].length');
+  assert.equal(await visible(), 0);
+  for (let n = 1; n <= count; n++) {
+    await key('ArrowRight', 39);
+    assert.equal(await evaluate('current'), 1);
+    assert.equal(await visible(), n);
+  }
+  await key('ArrowRight', 39);
+  assert.equal(await evaluate('current'), 2);
+  assert.equal(await visible(), 0);
+  await key('ArrowLeft', 37);
+  assert.equal(await evaluate('current'), 1);
+  assert.equal(await visible(), count);
+  await key('ArrowLeft', 37);
+  assert.equal(await visible(), count - 1);
+  assert.equal(await evaluate('bullets[current].at(-1).inert'), true);
+  // A fresh slide must print every bullet, including those not revealed on screen.
+  await evaluate('show(1)');
+  await call('Emulation.setEmulatedMedia', { media: 'print' });
+  assert.equal(await visible(), count);
+  await call('Emulation.setEmulatedMedia', { media: 'screen' });
+  assert.equal(await visible(), 0);
   await call('Input.dispatchKeyEvent', { type: 'keyDown', key: 'End', code: 'End', windowsVirtualKeyCode: 35 });
   assert.equal(await evaluate('current'), await evaluate('slides.length - 1'));
   await call('Emulation.setEmulatedMedia', { media: 'print' });
   const printFailures = await evaluate(`slides.filter(slide => {
     const rect = slide.getBoundingClientRect();
-    return [...slide.querySelectorAll('h2, ul, pre')].some(el => el.getBoundingClientRect().bottom > rect.top + 670);
+    return [...slide.querySelectorAll('h2, ul, pre, .discord-qr, .title-author, .title-term')].some(el => el.getBoundingClientRect().bottom > rect.top + 670);
   }).map(slide => slide.id)`);
   assert.deepEqual(printFailures, []);
   await call('Emulation.setEmulatedMedia', { media: 'screen' });
   if (process.argv.includes('--screenshots')) {
     await call('Emulation.setDeviceMetricsOverride', { width: 1920, height: 1080, deviceScaleFactor: 1, mobile: false });
-    for (const name of ['course-organization', 'values-and-types', 'ownership-transfer-to-a-thread']) {
-      await evaluate(`resize(); show(slides.findIndex(slide => slide.id === ${JSON.stringify(name)}))`);
+    for (const name of ['programming-in-rust', 'contacts', 'course-organization']) {
+      await evaluate(`resize(); show(slides.findIndex(slide => slide.id === ${JSON.stringify(name)}), true)`);
       const { data } = await call('Page.captureScreenshot', { format: 'png' });
       await writeFile(new URL(`./.preview-${name}.png`, import.meta.url), Buffer.from(data, 'base64'));
     }
   }
-  console.log(`Verified ${examples} example links, keyboard navigation, and print bounds.`);
+  console.log(`Verified ${examples} example links, incremental bullets, reverse navigation, and full print visibility.`);
 } finally {
   clearTimeout(timeout);
   socket?.close();
