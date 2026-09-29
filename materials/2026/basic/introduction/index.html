@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Programming in Rust · Introduction</title>
+  <link rel="stylesheet" href="deck.css">
+</head>
+<body>
+  <main id="deck">
+<section id="programming-in-rust-nprg082" class="level1">
+<h1>Programming in Rust · NPRG082</h1>
+<section id="introduction" class="level2">
+<h2>Introduction</h2>
+<p><strong>Programming in Rust · winter 2026/27</strong></p>
+<p>Rust is a systems language. This lecture explains why it requires us
+to say who owns data and who may use it. We will compile a few short
+programs and read the errors.</p>
+</section>
+<section id="how-the-course-works" class="level2">
+<h2>How the course works</h2>
+<ul>
+<li>Six lecture/lab pairs, plus an optional extension block.</li>
+<li>Lectures and labs are 90 minutes each.</li>
+<li>Each core pair has two ReCodEx homeworks: an executable program and
+a library.</li>
+<li>The spring advanced Rust course is separate.</li>
+</ul>
+<p><a href="https://d3s.mff.cuni.cz/teaching/rust">Course schedule and
+materials</a> · <a href="https://matfyz.lho.sh">Course material
+hub</a></p>
+</section>
+<section id="work-submission-help" class="level2">
+<h2>Work, submission, help</h2>
+<ul>
+<li>Use Rust 1.88 for graded work. Check with
+<code>rustc --version</code>.</li>
+<li>Submit <code>main.rs</code> for executable tasks and
+<code>solution.rs</code> for library tasks. An assignment may allow
+additional files.</li>
+<li>Check the course page and each assignment for deadlines and
+grading.</li>
+<li>Bring questions and attempted solutions to the lab. Use the <a
+href="https://discord.gg/E4XpeWbJpx">course Discord</a> or contact the
+instructors.</li>
+</ul>
+<p>Install Rust before the next class. Check
+<code>cargo --version</code> and <code>rustc --version</code>.</p>
+</section>
+<section id="resource-management" class="level2">
+<h2>Resource management</h2>
+<p>A service reads a message and passes it to another thread. Someone
+must decide how long the message is kept, whether it can change, and
+when its storage is released.</p>
+<p>C and C++ often leave these decisions to the programmer. Garbage
+collection handles memory reclamation, but it changes the runtime and
+does not settle all resource or concurrency questions. Rust checks many
+of these decisions at compile time.</p>
+</section>
+<section id="references-and-mutation" class="level2">
+<h2>References and mutation</h2>
+<p>Predict whether this compiles. Then run it. Would reserving extra
+capacity make a difference?</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> values <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">10</span><span class="op">,</span> <span class="dv">20</span><span class="op">,</span> <span class="dv">30</span>]<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> first <span class="op">=</span> <span class="op">&amp;</span>values[<span class="dv">0</span>]<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    values<span class="op">.</span>push(<span class="dv">40</span>)<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{first}&quot;</span>)<span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+</section>
+<section id="the-compilers-rule" class="level2">
+<h2>The compiler’s rule</h2>
+<p><strong>Result:</strong> <code>push</code> may move the vector’s
+elements. The compiler rejects mutation while <code>first</code> is
+still needed, even if this particular <code>push</code> would not
+reallocate. A reference into a vector may become invalid when the vector
+changes.</p>
+<p>This rule rejects some programs that would run safely with today’s
+inputs. In exchange, safety does not depend on those inputs or on how
+much memory the vector happens to have reserved.</p>
+<p>Discuss ways to keep access to the first value after
+<code>push</code>.</p>
+</section>
+<section id="use-an-index" class="level2">
+<h2>Use an index</h2>
+<p>An index refers to a position, not an address in the vector’s
+allocation.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> values <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">10</span><span class="op">,</span> <span class="dv">20</span><span class="op">,</span> <span class="dv">30</span>]<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> first_index <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    values<span class="op">.</span>push(<span class="dv">40</span>)<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{}&quot;</span><span class="op">,</span> values[first_index])<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Appending leaves earlier indices unchanged. Inserting or removing an
+element before that position would change what the index refers to.</p>
+</section>
+<section id="ownership" class="level2">
+<h2>Ownership</h2>
+<p>Predict whether both bindings can be used after the assignment. Then
+run it.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> text <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;hello&quot;</span>)<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> other <span class="op">=</span> text<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{text}&quot;</span>)<span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{other}&quot;</span>)<span class="op">;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+</section>
+<section id="moves" class="level2">
+<h2>Moves</h2>
+<p><strong>Result:</strong> <code>text</code> cannot be used after the
+assignment. The <code>String</code> moved to <code>other</code>; its
+heap buffer was not copied. Only <code>other</code> owns it now.</p>
+<p>Rust does not make an implicit copy of a value that owns an
+allocation.</p>
+</section>
+<section id="copying-data" class="level2">
+<h2>Copying data</h2>
+<p>Copying a <code>String</code>’s buffer takes time and memory. Copying
+just its pointer and treating both copies as owners would be
+invalid.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> text <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;hello&quot;</span>)<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> other <span class="op">=</span> text<span class="op">.</span>clone()<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{text} / {other}&quot;</span>)<span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><code>clone</code> makes the copy explicit. When the function only
+needs to read data, borrowing is often simpler.</p>
+</section>
+<section id="borrowed-results" class="level2">
+<h2>Borrowed results</h2>
+<p>Here the function returns a view into its input rather than
+allocating a new string.</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> first_word(input<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    input<span class="op">.</span>split_whitespace()<span class="op">.</span>next()<span class="op">.</span>unwrap_or(<span class="st">&quot;&quot;</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> line <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;systems programming&quot;</span>)<span class="op">;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{}&quot;</span><span class="op">,</span> first_word(<span class="op">&amp;</span>line))<span class="op">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The returned <code>&amp;str</code> is valid while the input’s storage
+is valid. No allocation is needed.</p>
+</section>
+<section id="errors-as-values" class="level2">
+<h2>Errors as values</h2>
+<p><code>port</code> returns either a number or a parse error.</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> port(input<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">u16</span><span class="op">,</span> <span class="pp">std::num::</span>ParseIntError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    input<span class="op">.</span>parse()</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> input <span class="kw">in</span> [<span class="st">&quot;8080&quot;</span><span class="op">,</span> <span class="st">&quot;not a number&quot;</span>] <span class="op">{</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="pp">println!</span>(<span class="st">&quot;{input:?}: {:?}&quot;</span><span class="op">,</span> port(input))<span class="op">;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Rust warns when a <code>Result</code> is ignored. The caller can
+handle the error, propagate it, or explicitly discard it. Panics and
+logic bugs are still possible.</p>
+</section>
+<section id="transferring-work-to-a-thread" class="level2">
+<h2>Transferring work to a thread</h2>
+<p><code>move</code> transfers ownership of <code>message</code> into
+the thread’s closure.</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> message <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;work&quot;</span>)<span class="op">;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> handle <span class="op">=</span> <span class="pp">std::thread::</span>spawn(<span class="kw">move</span> <span class="op">||</span> message<span class="op">.</span>len())<span class="op">;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{}&quot;</span><span class="op">,</span> handle<span class="op">.</span>join()<span class="op">.</span>unwrap())<span class="op">;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The thread can use <code>message</code> even if the spawning scope
+ends. <code>join</code> waits for its result. We will cover shared state
+and synchronization later.</p>
+</section>
+<section id="costs-and-limits" class="level2">
+<h2>Costs and limits</h2>
+<ul>
+<li>Safe Rust prevents memory errors of this kind and makes resource
+ownership explicit.</li>
+<li>Static checking sometimes rejects code that would have run safely.
+You may need to change the data structure or API.</li>
+<li>Rust does not prevent logic errors or all concurrency errors.
+<code>unsafe</code> code has additional obligations.</li>
+</ul>
+</section>
+<section id="exercise" class="level2">
+<h2>Exercise</h2>
+<p>A function returns a reference into a growable buffer. The caller
+needs to change the buffer while retaining access to an element.</p>
+<ul>
+<li>Return a copy of the element if that cost is acceptable.</li>
+<li>Keep an index if the planned changes preserve the element’s
+position.</li>
+<li>Finish using the reference before changing the buffer.</li>
+</ul>
+<p>Choose one approach and state what the caller may do afterward.</p>
+</section>
+<section id="before-next-time" class="level2">
+<h2>Before next time</h2>
+<p>Install Rust 1.88, check <code>rustc --version</code> and
+<code>cargo --version</code>, and run one example from this lecture.
+Bring a compiler error that you did not expect.</p>
+<p>Next lecture: ownership and borrowing in more detail.</p>
+</section>
+</section>
+  </main>
+  <nav class="deck-controls" aria-label="Slide navigation">
+    <button type="button" id="previous" aria-label="Previous slide">Previous</button>
+    <output id="position" aria-live="polite"></output>
+    <button type="button" id="next" aria-label="Next slide">Next</button>
+  </nav>
+  <script src="deck.js"></script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+/* A teaching surface: the typography and single substrate of Interlisp Paper,
+   without the site's masthead, window furniture, or promotional composition. */
+@font-face { font-family: Paper; src: url("fonts/times-new-roman-regular.woff2"); font-weight: 400; }
+@font-face { font-family: Paper; src: url("fonts/times-new-roman-bold.woff2"); font-weight: 700; }
+@font-face { font-family: Paper; src: url("fonts/times-new-roman-italic.woff2"); font-weight: 400; font-style: italic; }
+@font-face { font-family: Paper; src: url("fonts/times-new-roman-bold-italic.woff2"); font-weight: 700; font-style: italic; }
+@font-face { font-family: Typewriter; src: url("fonts/cmu-typewriter-regular.woff2"); font-weight: 400; }
+@font-face { font-family: Typewriter; src: url("fonts/cmu-typewriter-bold.woff2"); font-weight: 700; }
+@font-face { font-family: Typewriter; src: url("fonts/cmu-typewriter-italic.woff2"); font-style: italic; font-weight: 400; }
+@font-face { font-family: Typewriter; src: url("fonts/cmu-typewriter-bold-italic.woff2"); font-style: italic; font-weight: 700; }
+:root { --ink: #000; --paper: #fffefa; }
+* { box-sizing: border-box; }
+html { background: var(--paper); color: var(--ink); font-family: Paper, "Times New Roman", serif; }
+body { margin: 0; }
+::selection { color: var(--paper); background: var(--ink); }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+#deck > section.level1 > h1 { display: none; }
+section.level2 {
+  display: none;
+  width: 100vw;
+  height: 100vh;
+  padding: 5vh 5vw 8vh;
+  overflow: auto;
+  font-size: clamp(20px, 1.95vw, 36px);
+  line-height: 1.25;
+}
+section.level2.active { display: block; }
+h2 { font-size: 1.7em; line-height: 1.06; margin: 0 0 .55em; font-weight: 700; }
+p { margin: .45em 0 .65em; max-width: 44em; }
+ul, ol { margin: .3em 0 .6em; padding-left: 1.2em; max-width: 45em; }
+li { padding-left: .1em; margin: .25em 0; }
+a { color: inherit; font-style: italic; text-decoration: underline; text-underline-offset: .12em; }
+strong { font-weight: 700; }
+code, pre, textarea { font-family: Typewriter, "Courier New", monospace; }
+code { font-size: .87em; }
+pre { font-size: .82em; line-height: 1.22; margin: .5em 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.sourceCode { background: none !important; color: var(--ink) !important; }
+.sourceCode span { color: var(--ink) !important; background: none !important; text-decoration: none !important; }
+.sourceCode .kw, .sourceCode .dt, .sourceCode .pp { font-weight: 700; }
+.sourceCode .co { font-style: italic; }
+.sourceCode a { pointer-events: none; }
+.example-actions { display: flex; gap: .6em; align-items: center; margin: .4em 0 .6em; }
+button { font: 700 .65em Paper, "Times New Roman", serif; color: var(--ink); background: var(--paper); border: 1px solid var(--ink); border-radius: 0; padding: .25em .6em; cursor: pointer; }
+button:hover { color: var(--paper); background: var(--ink); }
+button:disabled { cursor: default; border-style: dashed; background: var(--paper); color: var(--ink); }
+.editor { width: min(100%, 68ch); height: 11em; padding: .45em; font-size: .72em; line-height: 1.2; resize: vertical; border: 1px solid var(--ink); color: var(--ink); background: var(--paper); }
+.deck-controls { position: fixed; bottom: 1.3vh; right: 5vw; display: flex; align-items: center; gap: .65em; font: 20px Paper, "Times New Roman", serif; background: var(--paper); }
+.deck-controls button { font-size: .85em; }
+@media print {
+  @page { size: 320mm 180mm; margin: 0; }
+  html, body { margin: 0; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  section.level2, section.level2.active {
+    display: block !important; width: 320mm; height: 180mm;
+    padding: 13mm 16mm; overflow: hidden; break-after: page;
+    page-break-after: always; font-size: 22pt;
+  }
+  section.level2:last-of-type { break-after: auto; page-break-after: auto; }
+  h2 { margin-bottom: .5em; }
+  pre { white-space: pre; overflow-wrap: normal; font-size: .74em; }
+  .deck-controls, .example-actions, .editor { display: none !important; }
+}
