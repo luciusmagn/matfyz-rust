@@ -2,10 +2,15 @@
 import { spawn } from 'node:child_process';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, resolve, join } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { once } from 'node:events';
 import assert from 'node:assert/strict';
 
+const options = new Set(process.argv.slice(2).filter(arg => arg.startsWith('--')));
+const targetArg = process.argv.slice(2).find(arg => !arg.startsWith('--'));
+const scriptDir = dirname(fileURLToPath(import.meta.url));
+const target = targetArg ? resolve(process.cwd(), targetArg) : join(scriptDir, 'index.html');
 const profile = await mkdtemp(join(tmpdir(), 'rust-slides-'));
 const browser = spawn('chromium', [
   '--headless', '--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu',
@@ -51,36 +56,53 @@ try {
     return result.result.value;
   }
   await call('Page.enable');
-  await call('Page.navigate', { url: new URL('./index.html', import.meta.url).href });
+  await call('Page.navigate', { url: pathToFileURL(target).href });
   for (let n = 0; n < 100; n++) {
     if (await evaluate('document.readyState === "complete" && typeof show === "function"')) break;
     await new Promise(resolve => setTimeout(resolve, 50));
   }
   await evaluate('document.fonts.ready.then(() => true)');
+  // Fit at the logical slide size, then require the same result on every viewport.
+  await call('Emulation.setDeviceMetricsOverride', { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
+  await evaluate('resize(); fitSlides()');
+  const referenceScales = await evaluate(`slides.map(slide =>
+    parseFloat(getComputedStyle(slide).getPropertyValue('--content-scale')) || 1)`);
   for (const [width, height] of [[1920, 1080], [1280, 720], [1024, 768], [3840, 2160]]) {
     await call('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false });
-    await evaluate('resize()');
+    await evaluate('resize(); fitSlides()');
     const results = await evaluate(`(() => {
       const failures = [];
       const scale = Math.min(innerWidth / 1280, innerHeight / 720);
+      const content = slides.map(slide => ({
+        id: slide.id,
+        scale: parseFloat(getComputedStyle(slide).getPropertyValue('--content-scale')) || 1
+      }));
+      const minContentScale = Math.min(...content.map(slide => slide.scale));
+      const scaledSlides = content.filter(slide => slide.scale < .98);
+      const checked = 'h2, ul, pre, figure, img, svg, .discord-qr, .title-author, .title-term';
       slides.forEach((slide, index) => {
         show(index, true);
         const rect = slide.getBoundingClientRect();
         if (rect.left < -1 || rect.top < -1 || rect.right > innerWidth + 1 || rect.bottom > innerHeight + 1)
           failures.push(slide.id + ': outside viewport');
-        for (const element of slide.querySelectorAll('h2, ul, pre, .discord-qr, .title-author, .title-term')) {
+        for (const element of slide.querySelectorAll(checked)) {
           const box = element.getBoundingClientRect();
           if (box.bottom > rect.top + 670 * scale || box.right > rect.right - 59 * scale)
             failures.push(slide.id + ': content outside safe area');
           if (element.tagName === 'PRE' && element.scrollWidth > element.clientWidth + 1)
             failures.push(slide.id + ': code wider than slide');
         }
+        for (const image of slide.querySelectorAll('img'))
+          if (!image.complete || image.naturalWidth === 0) failures.push(slide.id + ': image failed to load');
       });
       show(0);
-      return { slides: slides.length, failures, bodyPixels: 40 * scale, codePixels: 32 * scale };
+      return { slides: slides.length, failures, minContentScale, scaledSlides,
+        contentScales: content.map(slide => slide.scale), bodyPixels: 40 * scale, codePixels: 32 * scale };
     })()`);
-    console.log(`${width}x${height}: ${JSON.stringify(results)}`);
+    const { contentScales, ...summary } = results;
+    console.log(`${width}x${height}: ${JSON.stringify(summary)}`);
     assert.deepEqual(results.failures, []);
+    assert.deepEqual(contentScales, referenceScales, 'Text fitting changed with viewport scale');
   }
   const examples = await evaluate(`(() => {
     for (const pre of document.querySelectorAll('pre.runnable')) {
@@ -118,21 +140,26 @@ try {
   assert.equal(await visible(), count);
   await call('Emulation.setEmulatedMedia', { media: 'screen' });
   assert.equal(await visible(), 0);
-  await call('Input.dispatchKeyEvent', { type: 'keyDown', key: 'End', code: 'End', windowsVirtualKeyCode: 35 });
+  await key('End', 35);
   assert.equal(await evaluate('current'), await evaluate('slides.length - 1'));
   await call('Emulation.setEmulatedMedia', { media: 'print' });
   const printFailures = await evaluate(`slides.filter(slide => {
     const rect = slide.getBoundingClientRect();
-    return [...slide.querySelectorAll('h2, ul, pre, .discord-qr, .title-author, .title-term')].some(el => el.getBoundingClientRect().bottom > rect.top + 670);
+    return [...slide.querySelectorAll('h2, ul, pre, figure, img, svg, .discord-qr, .title-author, .title-term')].some(el => el.getBoundingClientRect().bottom > rect.top + 670);
   }).map(slide => slide.id)`);
   assert.deepEqual(printFailures, []);
   await call('Emulation.setEmulatedMedia', { media: 'screen' });
-  if (process.argv.includes('--screenshots')) {
+  if (options.has('--screenshots')) {
     await call('Emulation.setDeviceMetricsOverride', { width: 1920, height: 1080, deviceScaleFactor: 1, mobile: false });
-    for (const name of ['programming-in-rust', 'contacts', 'course-organization']) {
-      await evaluate(`resize(); show(slides.findIndex(slide => slide.id === ${JSON.stringify(name)}), true)`);
+    const previewSlides = await evaluate(`(() => {
+      const marked = [...document.querySelectorAll('section[data-preview]')];
+      return (marked.length ? marked : ['programming-in-rust', 'contacts', 'course-organization'].map(id => document.getElementById(id)).filter(Boolean))
+        .map(slide => slide.id);
+    })()`);
+    for (const id of previewSlides) {
+      await evaluate(`resize(); show(slides.findIndex(slide => slide.id === ${JSON.stringify(id)}), true)`);
       const { data } = await call('Page.captureScreenshot', { format: 'png' });
-      await writeFile(new URL(`./.preview-${name}.png`, import.meta.url), Buffer.from(data, 'base64'));
+      await writeFile(join(dirname(target), `.preview-${id}.png`), Buffer.from(data, 'base64'));
     }
   }
   console.log(`Verified ${examples} example links, incremental bullets, reverse navigation, and full print visibility.`);

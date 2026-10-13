@@ -27,13 +27,13 @@ function resize() {
 }
 function contentFits(slide) {
   const style = getComputedStyle(slide);
-  const rect = slide.getBoundingClientRect();
-  const right = rect.right - parseFloat(style.paddingRight);
-  const bottom = rect.bottom - parseFloat(style.paddingBottom);
+  // Compare layout pixels, not transformed viewport pixels.
+  const right = slide.clientWidth - parseFloat(style.paddingRight);
+  const bottom = slide.clientHeight - parseFloat(style.paddingBottom);
   for (const child of slide.children) {
     if (child.classList.contains("slide-number")) continue;
-    const box = child.getBoundingClientRect();
-    if (box.right > right + .5 || box.bottom > bottom + .5) return false;
+    if (child.offsetLeft + child.offsetWidth > right + .5 ||
+        child.offsetTop + child.offsetHeight > bottom + .5) return false;
   }
   return [...slide.querySelectorAll("pre")]
     .every(pre => pre.scrollWidth <= pre.clientWidth + 1);
