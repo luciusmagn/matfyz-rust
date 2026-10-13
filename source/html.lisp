@@ -20,6 +20,8 @@
    (list :id "L1"
          :topic "Ownership and borrowing"
          :lecture-dir "materials/2026/basic/lecture-01-ownership-borrowing"
+         :lecture-html "index.html"
+         :lecture-source "lesson.md"
          :lab-dir "materials/2026/basic/lab-01-ownership-borrowing"
          :hw-a "homeworks/2026/introductory/pair-01-ownership/hw-a-executable/README.md"
          :hw-b "homeworks/2026/introductory/pair-01-ownership/hw-b-library/README.md"
@@ -389,14 +391,20 @@
               (:tbody
                (dolist (lesson lessons)
                  (let ((lecture-dir (getf lesson :lecture-dir))
+                       (lecture-html (getf lesson :lecture-html))
+                       (lecture-source (or (getf lesson :lecture-source) "main.typ"))
                        (lab-dir (getf lesson :lab-dir)))
                    (:tr
                     (:td (getf lesson :id))
                     (:td (getf lesson :topic))
                     (:td
+                     (when lecture-html
+                       (:a :href (format nil "/~A/~A" lecture-dir lecture-html) "html")
+                       " · ")
                      (:a :href (format nil "/~A/main.pdf" lecture-dir) "pdf")
                      " · "
-                     (:a :href (format nil "/~A/main.typ" lecture-dir) "typst"))
+                     (:a :href (format nil "/~A/~A" lecture-dir lecture-source)
+                         (if (string= lecture-source "main.typ") "typst" "source")))
                     (:td
                      (:a :href (format nil "/~A/main.pdf" lab-dir) "pdf")
                      " · "

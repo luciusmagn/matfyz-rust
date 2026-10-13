@@ -37,15 +37,16 @@ The server will start on port 27777 by default.
 (matfyz:stop-server)
 #+end_src
 
-** Building the introductory lecture
+** Building the lectures
 
-Run this from the repository root (or any current directory):
+Run from the repository root:
 
 #+begin_src bash
-./build.sh
+./build.sh introduction
+./build.sh ownership
 #+end_src
 
-This rebuilds the HTML and PDF for =materials/2026/basic/introduction/=. See that directory's =README.md= for editing and presentation controls.
+Use =./build.sh= for the introduction. Edit =lesson.md= in =materials/2026/basic/introduction/= or =materials/2026/basic/lecture-01-ownership-borrowing/=. See each directory's =README.md= for HTML/PDF builds, presentation controls, and verification.
 
 * Configuration
 

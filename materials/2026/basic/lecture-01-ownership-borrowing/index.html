@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Programming in Rust · Ownership</title>
+  <link rel="stylesheet" href="../introduction/deck.css">
+  <link rel="stylesheet" href="ownership.css">
+</head>
+<body>
+  <main id="deck">
+<section id="programming-in-rust-nprg082" class="level1">
+<h1>Programming in Rust · NPRG082</h1>
+<section id="ownership" class="level2 title-slide" data-preview="true">
+<h2 class="title-slide" data-preview="true"><span
+class="title-language">Ownership</span></h2>
+<div class="title-author">
+<p>Lukáš Hozda</p>
+</div>
+<div class="title-term">
+<p>NPRG082 · winter 2026/27</p>
+</div>
+</section>
+<section id="values-and-resources" class="level2">
+<h2>Values and resources</h2>
+<ul>
+<li>Ownership: responsibility for an owned value</li>
+<li>Moves, copies, and explicit duplication</li>
+<li>Destruction and resource lifetime</li>
+<li>Borrowing: access without ownership transfer</li>
+</ul>
+</section>
+<section id="resource-lifetime" class="level2">
+<h2>Resource lifetime</h2>
+<ul>
+<li>Allocated memory, open files, held locks</li>
+<li>Access after release: invalid resource</li>
+<li>Two independent releases: double cleanup</li>
+<li>Ownership and borrowing: compile-time rules for valid access</li>
+</ul>
+</section>
+<section id="values-and-bindings" class="level2">
+<h2>Values and bindings</h2>
+<div class="sourceCode" id="cb1" data-output="3"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> text <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;oak&quot;</span>)<span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{}&quot;</span><span class="op">,</span> text<span class="op">.</span>len())<span class="op">;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code>text</code>: a local binding containing a
+<code>String</code></li>
+<li>The <code>String</code> owns a buffer of UTF-8 bytes</li>
+</ul>
+</section>
+<section id="owned-storage" class="level2" data-preview="true">
+<h2 data-preview="true">Owned storage</h2>
+<figure>
+<img src="owned-storage.svg" class="memory-diagram"
+alt="Conceptual String storage: a local value with a pointer, length and capacity, owning a buffer containing the bytes o, a and k." />
+<figcaption aria-hidden="true">Conceptual String storage: a local value
+with a pointer, length and capacity, owning a buffer containing the
+bytes o, a and k.</figcaption>
+</figure>
+<ul>
+<li>Length: bytes in use; capacity: allocated space</li>
+<li>Conceptual fields, not a specified field order</li>
+</ul>
+</section>
+<section id="storage-and-ownership" class="level2">
+<h2>Storage and ownership</h2>
+<ul>
+<li>Local values: usually stored in the stack frame</li>
+<li><code>String</code> and <code>Vec&lt;T&gt;</code>: owned heap
+buffers</li>
+<li>Ownership rules apply to heap-free values too</li>
+<li>Storage placement and machine copies: compiler decisions</li>
+</ul>
+</section>
+<section id="scope" class="level2">
+<h2>Scope</h2>
+<div class="sourceCode" id="cb2" data-output="3"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> text <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;oak&quot;</span>)<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        <span class="pp">println!</span>(<span class="st">&quot;{}&quot;</span><span class="op">,</span> text<span class="op">.</span>len())<span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>The local value is dropped at the end of its scope</li>
+<li>Dropping this <code>String</code> releases its buffer</li>
+</ul>
+</section>
+<section id="ownership-transfer" class="level2">
+<h2>Ownership transfer</h2>
+<div class="sourceCode" id="cb3" data-output="oak"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> first <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;oak&quot;</span>)<span class="op">;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> second <span class="op">=</span> first<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{second}&quot;</span>)<span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Assignment moves a non-<code>Copy</code> value</li>
+<li><code>second</code> now owns the string</li>
+</ul>
+</section>
+<section id="use-after-move" class="level2">
+<h2>Use after move</h2>
+<div class="sourceCode" id="cb4" data-error="E0382"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> first <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;oak&quot;</span>)<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> second <span class="op">=</span> first<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{second}&quot;</span>)<span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{first}&quot;</span>)<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>E0382: use of a moved value</li>
+</ul>
+</section>
+<section id="string-move" class="level2" data-preview="true">
+<h2 data-preview="true">String move</h2>
+<figure>
+<img src="string-move.svg" class="memory-diagram"
+alt="After moving a String from first to second, first is unavailable and second owns the same byte buffer." />
+<figcaption aria-hidden="true">After moving a String from first to
+second, first is unavailable and second owns the same byte
+buffer.</figcaption>
+</figure>
+<ul>
+<li>Ownership transfer without duplicating the buffer</li>
+<li>The old binding has no value available for use or drop</li>
+</ul>
+</section>
+<section id="moves-without-allocation" class="level2">
+<h2>Moves without allocation</h2>
+<div class="sourceCode" id="cb5" data-error="E0382"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Token<span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> first <span class="op">=</span> Token<span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> _second <span class="op">=</span> first<span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> _third <span class="op">=</span> first<span class="op">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Even a zero-sized type is non-<code>Copy</code> by default</li>
+</ul>
+</section>
+<section id="reinitialization" class="level2">
+<h2>Reinitialization</h2>
+<div class="sourceCode" id="cb6" data-output="elm oak"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> first <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;oak&quot;</span>)<span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> second <span class="op">=</span> first<span class="op">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    first <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;elm&quot;</span>)<span class="op">;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{first} {second}&quot;</span>)<span class="op">;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>A moved binding can receive a new value</li>
+</ul>
+</section>
+<section id="owned-parameters" class="level2">
+<h2>Owned parameters</h2>
+<div class="sourceCode" id="cb7" data-output="3"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> byte_len(text<span class="op">:</span> <span class="dt">String</span>) <span class="op">-&gt;</span> <span class="dt">usize</span> <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    text<span class="op">.</span>len()</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> name <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;oak&quot;</span>)<span class="op">;</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{}&quot;</span><span class="op">,</span> byte_len(name))<span class="op">;</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>The argument moves into the parameter; the parameter is dropped on
+return</li>
+</ul>
+</section>
+<section id="return-values" class="level2">
+<h2>Return values</h2>
+<div class="sourceCode" id="cb8" data-output="oak"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> name() <span class="op">-&gt;</span> <span class="dt">String</span> <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> text <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;oak&quot;</span>)<span class="op">;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    text</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> result <span class="op">=</span> name()<span class="op">;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{result}&quot;</span>)<span class="op">;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Returning the value transfers ownership to the caller</li>
+</ul>
+</section>
+<section id="implicit-copies" class="level2">
+<h2>Implicit copies</h2>
+<div class="sourceCode" id="cb9" data-output="7 8"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> first <span class="op">=</span> <span class="dv">7</span><span class="op">;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> second <span class="op">=</span> first<span class="op">;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    second <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{first} {second}&quot;</span>)<span class="op">;</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code>i32</code> implements <code>Copy</code>: both bindings have
+usable values</li>
+</ul>
+</section>
+<section id="copy-as-a-type-property" class="level2">
+<h2>Copy as a type property</h2>
+<ul>
+<li>Implicit, bitwise duplication in value contexts</li>
+<li>Integers, floats, <code>bool</code>, <code>char</code>; tuples and
+arrays of <code>Copy</code> elements</li>
+<li>User-defined types: explicit implementation or derivation</li>
+<li>Type size and stack placement do not decide whether a type is
+<code>Copy</code></li>
+</ul>
+</section>
+<section id="derived-copy" class="level2">
+<h2>Derived Copy</h2>
+<div class="sourceCode" id="cb10" data-output="3 4"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Clone</span><span class="op">,</span> <span class="bu">Copy</span><span class="at">)]</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Pair(<span class="dt">i32</span><span class="op">,</span> <span class="dt">i32</span>)<span class="op">;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> first <span class="op">=</span> Pair(<span class="dv">3</span><span class="op">,</span> <span class="dv">4</span>)<span class="op">;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> second <span class="op">=</span> first<span class="op">;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{} {}&quot;</span><span class="op">,</span> first<span class="op">.</span><span class="dv">0</span><span class="op">,</span> second<span class="op">.</span><span class="dv">1</span>)<span class="op">;</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Every field must be <code>Copy</code>; a type with <code>Drop</code>
+cannot be <code>Copy</code></li>
+</ul>
+</section>
+<section id="explicit-duplication" class="level2">
+<h2>Explicit duplication</h2>
+<div class="sourceCode" id="cb11" data-output="oak oaks"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> first <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;oak&quot;</span>)<span class="op">;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> second <span class="op">=</span> first<span class="op">.</span>clone()<span class="op">;</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    second<span class="op">.</span>push(<span class="ch">&#39;s&#39;</span>)<span class="op">;</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{first} {second}&quot;</span>)<span class="op">;</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code>String::clone</code>: a separate owned buffer with the same
+contents</li>
+</ul>
+</section>
+<section id="move-copy-clone" class="level2">
+<h2>Move, copy, clone</h2>
+<ul>
+<li><strong>Move:</strong> ownership transfer; source value
+unavailable</li>
+<li><strong>Copy:</strong> implicit duplication; source value
+usable</li>
+<li><strong>Clone:</strong> explicit, type-defined duplication</li>
+<li>A clone may allocate; shared-pointer clones can share a
+resource</li>
+</ul>
+</section>
+<section id="partial-moves" class="level2">
+<h2>Partial moves</h2>
+<div class="sourceCode" id="cb12" data-output="L R"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> pair <span class="op">=</span> (<span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;L&quot;</span>)<span class="op">,</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;R&quot;</span>))<span class="op">;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> left <span class="op">=</span> pair<span class="op">.</span><span class="dv">0</span><span class="op">;</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{left} {}&quot;</span><span class="op">,</span> pair<span class="op">.</span><span class="dv">1</span>)<span class="op">;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Moving one field leaves the other field available</li>
+</ul>
+</section>
+<section id="whole-value-after-a-partial-move" class="level2">
+<h2>Whole value after a partial move</h2>
+<div class="sourceCode" id="cb13" data-error="E0382"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> pair <span class="op">=</span> (<span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;L&quot;</span>)<span class="op">,</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;R&quot;</span>))<span class="op">;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> _left <span class="op">=</span> pair<span class="op">.</span><span class="dv">0</span><span class="op">;</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{pair:?}&quot;</span>)<span class="op">;</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>E0382: the whole tuple is no longer available</li>
+</ul>
+</section>
+<section id="conditional-moves" class="level2">
+<h2>Conditional moves</h2>
+<div class="sourceCode" id="cb14" data-error="E0382"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> text <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;oak&quot;</span>)<span class="op">;</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> text<span class="op">.</span>len() <span class="op">&gt;</span> <span class="dv">2</span> <span class="op">{</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> _taken <span class="op">=</span> text<span class="op">;</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{text}&quot;</span>)<span class="op">;</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>A value must be available on every path reaching its use</li>
+</ul>
+</section>
+<section id="destruction" class="level2">
+<h2>Destruction</h2>
+<ul>
+<li>Scope exit: drop the initialized local values</li>
+<li>Reverse declaration order for local bindings</li>
+<li>Recursive cleanup of owned fields</li>
+<li><code>Drop</code>: additional type-specific cleanup</li>
+</ul>
+</section>
+<section id="observable-drop-order" class="level2" data-preview="true">
+<h2 data-preview="true">Observable drop order</h2>
+<div class="sourceCode" id="cb15" data-output="2 end 1 "><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Trace(<span class="dt">u8</span>)<span class="op">;</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="bu">Drop</span> <span class="cf">for</span> Trace <span class="op">{</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> drop(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span>) <span class="op">{</span> <span class="pp">print!</span>(<span class="st">&quot;{} &quot;</span><span class="op">,</span> <span class="kw">self</span><span class="op">.</span><span class="dv">0</span>)<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> _outer <span class="op">=</span> Trace(<span class="dv">1</span>)<span class="op">;</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span> <span class="kw">let</span> _inner <span class="op">=</span> Trace(<span class="dv">2</span>)<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="pp">print!</span>(<span class="st">&quot;end &quot;</span>)<span class="op">;</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Inner scope first, then the remaining outer local</li>
+</ul>
+</section>
+<section id="early-release" class="level2">
+<h2>Early release</h2>
+<div class="sourceCode" id="cb16" data-error="E0382"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> text <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;oak&quot;</span>)<span class="op">;</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    drop(text)<span class="op">;</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{text}&quot;</span>)<span class="op">;</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code>std::mem::drop</code> takes its argument by value</li>
+<li>E0382: ownership was transferred into <code>drop</code></li>
+</ul>
+</section>
+<section id="replacement" class="level2">
+<h2>Replacement</h2>
+<div class="sourceCode" id="cb17" data-output="1 body 2 "><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Trace(<span class="dt">u8</span>)<span class="op">;</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="bu">Drop</span> <span class="cf">for</span> Trace <span class="op">{</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> drop(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span>) <span class="op">{</span> <span class="pp">print!</span>(<span class="st">&quot;{} &quot;</span><span class="op">,</span> <span class="kw">self</span><span class="op">.</span><span class="dv">0</span>)<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> value <span class="op">=</span> Trace(<span class="dv">1</span>)<span class="op">;</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    value <span class="op">=</span> Trace(<span class="dv">2</span>)<span class="op">;</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="pp">print!</span>(<span class="st">&quot;body &quot;</span>)<span class="op">;</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    drop(value)<span class="op">;</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Assignment drops the old value before storing the new one</li>
+</ul>
+</section>
+<section id="resource-management" class="level2">
+<h2>Resource management</h2>
+<ul>
+<li>Cleanup follows ownership, including ordinary early returns</li>
+<li>Unwinding: cleanup of initialized values on the unwound path</li>
+<li>Process exit and abort can skip destructors</li>
+<li>Memory safety does not imply freedom from resource leaks</li>
+</ul>
+</section>
+<section id="borrowed-access" class="level2">
+<h2>Borrowed access</h2>
+<div class="sourceCode" id="cb18" data-output="7 7"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> value <span class="op">=</span> <span class="dv">7</span><span class="op">;</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> view <span class="op">=</span> <span class="op">&amp;</span>value<span class="op">;</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{} {value}&quot;</span><span class="op">,</span> <span class="op">*</span>view)<span class="op">;</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code>&amp;value</code>: shared reference; <code>*view</code>:
+access to the referent</li>
+<li>Borrowing leaves ownership with the original owner</li>
+</ul>
+</section>
+<section id="shared-references" class="level2">
+<h2>Shared references</h2>
+<div class="sourceCode" id="cb19" data-output="oak oak"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> text <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;oak&quot;</span>)<span class="op">;</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> first <span class="op">=</span> <span class="op">&amp;</span>text<span class="op">;</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> second <span class="op">=</span> first<span class="op">;</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{first} {second}&quot;</span>)<span class="op">;</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code>&amp;T</code> is <code>Copy</code>, even when <code>T</code>
+is not</li>
+<li>Copying a reference does not duplicate the owned value</li>
+</ul>
+</section>
+<section id="mutable-references" class="level2">
+<h2>Mutable references</h2>
+<div class="sourceCode" id="cb20" data-output="8"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> value <span class="op">=</span> <span class="dv">7</span><span class="op">;</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> view <span class="op">=</span> <span class="op">&amp;</span><span class="kw">mut</span> value<span class="op">;</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>view <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{value}&quot;</span>)<span class="op">;</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Exclusive access through <code>&amp;mut T</code>;
+<code>&amp;mut T</code> is not <code>Copy</code></li>
+<li>The reference binding itself need not be <code>mut</code></li>
+</ul>
+</section>
+<section id="mutable-bindings" class="level2">
+<h2>Mutable bindings</h2>
+<div class="sourceCode" id="cb21" data-output="1 2"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> first <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> second <span class="op">=</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> view <span class="op">=</span> <span class="op">&amp;</span>first<span class="op">;</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">print!</span>(<span class="st">&quot;{view} &quot;</span>)<span class="op">;</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    view <span class="op">=</span> <span class="op">&amp;</span>second<span class="op">;</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{view}&quot;</span>)<span class="op">;</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code>mut view</code>: reassignment of the binding, not mutation
+through <code>&amp;T</code></li>
+</ul>
+</section>
+<section id="conflicting-access" class="level2">
+<h2>Conflicting access</h2>
+<div class="sourceCode" id="cb22" data-error="E0502"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> text <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;oak&quot;</span>)<span class="op">;</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> view <span class="op">=</span> <span class="op">&amp;</span>text<span class="op">;</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    text<span class="op">.</span>push(<span class="ch">&#39;s&#39;</span>)<span class="op">;</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{view}&quot;</span>)<span class="op">;</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>E0502: shared access overlaps the mutable access required by
+<code>push</code></li>
+</ul>
+</section>
+<section id="last-use-of-a-borrow" class="level2" data-preview="true">
+<h2 data-preview="true">Last use of a borrow</h2>
+<div class="sourceCode" id="cb23" data-output="oak oaks"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> text <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;oak&quot;</span>)<span class="op">;</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> view <span class="op">=</span> <span class="op">&amp;</span>text<span class="op">;</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">print!</span>(<span class="st">&quot;{view} &quot;</span>)<span class="op">;</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    text<span class="op">.</span>push(<span class="ch">&#39;s&#39;</span>)<span class="op">;</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{text}&quot;</span>)<span class="op">;</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>The borrow can end after its last use, before the binding’s scope
+ends</li>
+</ul>
+</section>
+<section id="exclusive-access" class="level2">
+<h2>Exclusive access</h2>
+<div class="sourceCode" id="cb24" data-error="E0499"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> value <span class="op">=</span> <span class="dv">7</span><span class="op">;</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> first <span class="op">=</span> <span class="op">&amp;</span><span class="kw">mut</span> value<span class="op">;</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> second <span class="op">=</span> <span class="op">&amp;</span><span class="kw">mut</span> value<span class="op">;</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{first} {second}&quot;</span>)<span class="op">;</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>E0499: overlapping mutable borrows of the same value</li>
+</ul>
+</section>
+<section id="reborrowing" class="level2">
+<h2>Reborrowing</h2>
+<div class="sourceCode" id="cb25" data-output="9"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> value <span class="op">=</span> <span class="dv">7</span><span class="op">;</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> outer <span class="op">=</span> <span class="op">&amp;</span><span class="kw">mut</span> value<span class="op">;</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> inner <span class="op">=</span> <span class="op">&amp;</span><span class="kw">mut</span> <span class="op">*</span>outer<span class="op">;</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span>inner <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>outer <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{value}&quot;</span>)<span class="op">;</span></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Temporary access through a shorter borrow</li>
+</ul>
+</section>
+<section id="reference-lifetime" class="level2">
+<h2>Reference lifetime</h2>
+<div class="sourceCode" id="cb26" data-error="E0597"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> view<span class="op">;</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> text <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;oak&quot;</span>)<span class="op">;</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>        view <span class="op">=</span> <span class="op">&amp;</span>text<span class="op">;</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{view}&quot;</span>)<span class="op">;</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>E0597: the referent must exist for every use of the reference</li>
+</ul>
+</section>
+<section id="owned-strings-and-string-slices" class="level2">
+<h2>Owned strings and string slices</h2>
+<ul>
+<li><code>String</code>: growable, owned UTF-8 buffer</li>
+<li><code>&amp;str</code>: borrowed view of UTF-8 bytes, with a
+length</li>
+<li>String literals: borrowed text with static storage</li>
+<li>Borrowed views do not allocate or extend the owner’s lifetime</li>
+</ul>
+</section>
+<section id="string-slices" class="level2">
+<h2>String slices</h2>
+<div class="sourceCode" id="cb27" data-output="red red green"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> text <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;red green&quot;</span>)<span class="op">;</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> prefix <span class="op">=</span> <span class="op">&amp;</span>text[<span class="op">..</span><span class="dv">3</span>]<span class="op">;</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{prefix} {text}&quot;</span>)<span class="op">;</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Slice indices are byte offsets</li>
+<li>String slice boundaries must be valid UTF-8 boundaries</li>
+</ul>
+</section>
+<section id="sequence-slices" class="level2">
+<h2>Sequence slices</h2>
+<div class="sourceCode" id="cb28" data-output="[20, 30]"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> values <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">10</span><span class="op">,</span> <span class="dv">20</span><span class="op">,</span> <span class="dv">30</span>]<span class="op">;</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> tail <span class="op">=</span> <span class="op">&amp;</span>values[<span class="dv">1</span><span class="op">..</span>]<span class="op">;</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{tail:?}&quot;</span>)<span class="op">;</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code>&amp;[T]</code>: borrowed contiguous elements, with a
+length</li>
+<li>One owned buffer, accessed through a smaller view</li>
+</ul>
+</section>
+<section id="vector-growth" class="level2">
+<h2>Vector growth</h2>
+<div class="sourceCode" id="cb29" data-error="E0502"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> values <span class="op">=</span> <span class="dt">Vec</span><span class="pp">::</span>with_capacity(<span class="dv">4</span>)<span class="op">;</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    values<span class="op">.</span>push(<span class="dv">10</span>)<span class="op">;</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> first <span class="op">=</span> <span class="op">&amp;</span>values[<span class="dv">0</span>]<span class="op">;</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>    values<span class="op">.</span>push(<span class="dv">20</span>)<span class="op">;</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{first}&quot;</span>)<span class="op">;</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code>push</code> requires <code>&amp;mut Vec&lt;T&gt;</code>, even
+with spare capacity</li>
+<li>Its signature requires exclusive access, rather than a proof of
+reallocation</li>
+</ul>
+</section>
+<section id="borrowed-parameters" class="level2">
+<h2>Borrowed parameters</h2>
+<div class="sourceCode" id="cb30" data-output="3 3"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> byte_len(text<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">usize</span> <span class="op">{</span> text<span class="op">.</span>len() <span class="op">}</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> owned <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;oak&quot;</span>)<span class="op">;</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> length <span class="op">=</span> byte_len(<span class="op">&amp;</span>owned)<span class="op">;</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{length} {}&quot;</span><span class="op">,</span> byte_len(<span class="st">&quot;elm&quot;</span>))<span class="op">;</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>A <code>&amp;str</code> parameter accepts a borrowed
+<code>String</code> or a string literal</li>
+</ul>
+</section>
+<section id="borrowed-results" class="level2">
+<h2>Borrowed results</h2>
+<div class="sourceCode" id="cb31" data-output="oak"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> trimmed(text<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">{</span> text<span class="op">.</span>trim() <span class="op">}</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> owned <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot; oak &quot;</span>)<span class="op">;</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> view <span class="op">=</span> trimmed(<span class="op">&amp;</span>owned)<span class="op">;</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{view}&quot;</span>)<span class="op">;</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>The result borrows the input; no new string allocation</li>
+<li>With one input lifetime, the output lifetime is inferred from
+it</li>
+</ul>
+</section>
+<section id="ownership-in-signatures" class="level2">
+<h2>Ownership in signatures</h2>
+<div class="sourceCode" id="cb32"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> inspect(text<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">{</span> <span class="co">/* shared access */</span> <span class="op">}</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> change(text<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> <span class="dt">String</span>) <span class="op">{</span> <span class="co">/* exclusive access */</span> <span class="op">}</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> consume(text<span class="op">:</span> <span class="dt">String</span>) <span class="op">{</span> <span class="co">/* owned input */</span> <span class="op">}</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> create() <span class="op">-&gt;</span> <span class="dt">String</span> <span class="op">{</span> <span class="dt">String</span><span class="pp">::</span>new() <span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Shared access, exclusive access, or ownership transfer</li>
+<li>The signature expresses the caller’s obligations</li>
+</ul>
+</section>
+<section id="ownership-choices" class="level2">
+<h2>Ownership choices</h2>
+<ul>
+<li>Borrow for temporary access</li>
+<li>Transfer ownership when the recipient needs the value</li>
+<li>Clone when a second owned value is needed</li>
+<li>Return an owned value for newly created data</li>
+</ul>
+</section>
+<section id="ownership-model" class="level2">
+<h2>Ownership model</h2>
+<ul>
+<li>Each owned value: one owner at a time</li>
+<li>Move: transfer; <code>Copy</code>: implicit duplicate;
+<code>Clone</code>: explicit duplicate</li>
+<li>Destruction: cleanup of the values still owned</li>
+<li>Borrowing: bounded shared or exclusive access</li>
+</ul>
+</section>
+<section id="references" class="level2">
+<h2>References</h2>
+<ul>
+<li><a
+href="https://doc.rust-lang.org/book/ch04-00-understanding-ownership.html">The
+Rust Book: Understanding Ownership</a></li>
+<li><a href="https://doc.rust-lang.org/reference/destructors.html">The
+Rust Reference: Destructors</a></li>
+<li><a
+href="https://doc.rust-lang.org/std/marker/trait.Copy.html"><code>Copy</code>
+and <code>Clone</code></a></li>
+<li><a
+href="https://doc.rust-lang.org/std/string/struct.String.html#representation"><code>String</code>
+representation</a></li>
+<li><a
+href="https://doc.rust-lang.org/std/vec/struct.Vec.html#guarantees"><code>Vec</code>
+guarantees</a></li>
+</ul>
+</section>
+</section>
+  </main>
+  <script src="../introduction/deck.js"></script>
+</body>
+</html>

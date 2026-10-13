@@ -1,0 +1,7 @@
+.title-language {
+  font-size: calc(144px * var(--content-scale));
+  letter-spacing: -3px;
+}
+figure { margin: 0 0 24px; }
+.memory-diagram { display: block; width: 100%; height: 340px; object-fit: contain; }
+figcaption { display: none; }

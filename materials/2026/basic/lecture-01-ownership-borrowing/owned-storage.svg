@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="340" viewBox="0 0 1160 340" role="img" aria-labelledby="title description">
+  <title id="title">Owned String storage</title>
+  <desc id="description">The local String named text contains a pointer, a length of three bytes, and a capacity of at least three bytes. Its pointer refers to an owned heap buffer containing o, a, k. Field order is illustrative.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="black" stroke-width="1.5"/></marker>
+  </defs>
+  <g fill="black" font-family="Times New Roman MT Std, Times New Roman, serif" font-size="36">
+    <text x="35" y="46">text: String</text>
+    <text x="782" y="46">Owned heap buffer</text>
+    <g fill="none" stroke="black" stroke-width="2">
+      <rect x="35" y="76" width="495" height="210"/>
+      <path d="M 35 146 H 530 M 35 216 H 530 M 350 76 V 286"/>
+      <rect x="782" y="76" width="300" height="100"/>
+      <path d="M 882 76 V 176 M 982 76 V 176"/>
+      <path d="M 468 111 H 720 L 770 126" marker-end="url(#arrow)"/>
+    </g>
+    <text x="58" y="123">pointer</text>
+    <text x="58" y="193">length</text>
+    <text x="58" y="263">capacity</text>
+    <text x="425" y="193">3</text>
+    <text x="400" y="263">≥ 3</text>
+    <text x="832" y="139" text-anchor="middle">o</text>
+    <text x="932" y="139" text-anchor="middle">a</text>
+    <text x="1032" y="139" text-anchor="middle">k</text>
+    <text x="782" y="242">UTF-8 bytes</text>
+  </g>
+</svg>
