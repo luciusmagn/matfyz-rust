@@ -2,13 +2,12 @@
 
 - [HTML slides](index.html)
 - [PDF slides](main.pdf)
-- [90-minute teaching notes](teaching-notes.md)
 
-The 63 slides cover memory and pointers, stack and heap, structs, Box, ownership, borrowing, methods and lifetime elision. Stacked Borrows is introduced as an experimental aliasing model.
+The 49 slides cover memory and pointers, stack and heap, structs, Box, ownership, borrowing, methods and lifetime elision.
 
 ## Editing and building
 
-Edit `lesson.md`, using `##` headings, bullet lists, and short Rust examples. The SVG diagrams cover pointers, owned storage, moves and reborrowing.
+Edit `lesson.md`, using `##` headings, bullet lists, and short Rust examples. The SVG diagrams cover pointers, owned storage and moves.
 
 Run `./build.sh` in this directory, or `./build.sh ownership` from the repository root. Install Pandoc and Chromium to generate `index.html` and `main.pdf`. The shared styles, fonts, and presentation script are in `../introduction/`. Lecture-specific styles are in `ownership.css`.
 

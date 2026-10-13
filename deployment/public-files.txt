@@ -20,4 +20,3 @@ materials/2026/basic/lecture-01-ownership-borrowing/owned-storage.svg
 materials/2026/basic/lecture-01-ownership-borrowing/ownership.css
 materials/2026/basic/lecture-01-ownership-borrowing/string-move.svg
 materials/2026/basic/lecture-01-ownership-borrowing/pointer.svg
-materials/2026/basic/lecture-01-ownership-borrowing/reborrow-stack.svg
