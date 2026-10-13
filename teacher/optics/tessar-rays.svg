@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="300" viewBox="0 0 1500 300">
+  <title>Reference ray through the three-thin-lens Tessar teaching model</title>
+  <desc>Lens planes at z = 0, 10, 20 mm, stop at 15 mm. A parallel ray enters at 1 mm height and reaches the output with height 68/75 mm and slope -7/375. The rear focus is 340/7 mm beyond the last lens. Lens symbols and stop opening are schematic.</desc>
+  <g fill="none" stroke="black">
+    <path d="M35 150 H1435" stroke-width="1.2" stroke-dasharray="12 7"/>
+    <path d="M1420 144 L1435 150 L1420 156" stroke-width="1.2"/>
+    <!-- Centred ideal lenses: outward arrows positive, inward arrows negative. -->
+    <path d="M140 45 V255 M133 58 L140 45 L147 58 M133 242 L140 255 L147 242" stroke-width="2.5"/>
+    <path d="M300 45 V255 M293 45 L300 58 L307 45 M293 255 L300 242 L307 255" stroke-width="2.5"/>
+    <path d="M460 45 V255 M453 58 L460 45 L467 58 M453 242 L460 255 L467 242" stroke-width="2.5"/>
+    <path d="M380 45 V65 M380 235 V255" stroke-width="6"/>
+    <!-- Ray heights: 80 px/mm; axial scale: 16 px/mm. -->
+    <path d="M35 70 H140 L300 80.666667 L380 79.066667 L460 77.466667 L1237.142857 150 L1350 160.533333" stroke-width="3"/>
+    <path d="M74 65 L88 70 L74 75 M985 122 L1000 127.866667 L984 132" stroke-width="2"/>
+    <path d="M90 70 V150 M84 70 H96 M84 150 H96" stroke-width="1.2"/>
+    <path d="M490 77.466667 V150 M484 77.466667 H496 M484 150 H496" stroke-width="1.2"/>
+    <path d="M1237.142857 133 V165" stroke-width="1.5"/>
+    <path d="M140 267 H300 M140 260 V274 M300 260 V274 M300 267 H380 M380 260 V274 M380 267 H460 M460 260 V274" stroke-width="1.2"/>
+    <path d="M460 267 H1237.142857 M460 259 V275 M1237.142857 259 V275" stroke-width="1.5"/>
+  </g>
+  <g fill="black" font-family="Times New Roman MT Std,serif" font-size="23" text-anchor="middle">
+    <text x="140" y="27">f₁ = +75</text>
+    <text x="300" y="27">f₂ = −50</text>
+    <text x="460" y="27">f₃ = +40</text>
+    <text x="66" y="116">h₀</text>
+    <text x="519" y="122">yₒ</text>
+    <text x="750" y="86">output ray: uₒ &lt; 0</text>
+    <text x="1260" y="129">F′</text>
+    <text x="104" y="179">z = 0</text>
+    <text x="380" y="224">stop</text>
+    <text x="220" y="294">10</text>
+    <text x="340" y="294">5</text>
+    <text x="420" y="294">5</text>
+    <text x="850" y="294">b: final plane to F′</text>
+    <text x="1405" y="138">z</text>
+    <text x="1400" y="294">distances in mm</text>
+  </g>
+</svg>

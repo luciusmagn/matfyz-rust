@@ -1,0 +1,13 @@
+lens 100 40
+gap 4
+lens 60 36
+gap 6
+lens -80 30
+gap 5
+stop 8
+gap 5
+lens -80 30
+gap 6
+lens 60 36
+gap 4
+lens 100 40

@@ -1,0 +1,26 @@
+# name length_mm focal_mm back_mm pupil_mm f_number limiting_element
+# '-' means no finite value / not applicable / no limiting opening.
+# Independently checked by exact rational ray tracing.
+single-lens 0 50 50 25 2 1
+two-lenses 50 66.666666666667 33.333333333333 30 2.222222222222 1
+internal-stop 25 50 25 20 2.5 3
+compound 50 61.538461538462 30.769230769231 12.5 4.923076923077 3
+telescope 150 - - 30 - 1
+diverging 0 -50 -50 20 - 1
+stop-at-focus 50 50 0 20 2.5 1
+tessar-model 20 53.571428571429 48.571428571429 9.022556390977 5.9375 5
+cooke-triplet-model 24 139.534883720930 133.255813953488 10.869565217391 12.837209302326 5
+double-gauss-model 30 43.283344677177 22.756362741841 11.045909561615 3.918495297806 7
+retrofocus-model 20 66.666666666667 93.333333333333 7.142857142857 9.333333333333 3
+telephoto-model 20 100 66.666666666667 12 8.333333333333 3
+galilean-telescope 75 - - 30 - 1
+contact-pair 0 200 200 20 10 3
+trailing-gap 80 50 -30 25 2 1
+front-stop 20 50 50 10 5 1
+rear-lens-limited 50 66.666666666667 33.333333333333 20 3.333333333333 3
+smaller-hole 25 50 25 30 1.666666666667 1
+stop-after-focus 75 50 -25 10 5 3
+aperture-only 10 - - 8 - 2
+air-only 10 - - - - -
+weak-lens 0 1000000000000000 1000000000000000 20 50000000000000 1
+tied-openings 25 50 25 20 2.5 1

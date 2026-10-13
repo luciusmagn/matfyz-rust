@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="220" viewBox="0 0 1500 220">
+  <title>Tessar: four elements in three groups</title>
+  <desc>Schematic positive singlet, negative singlet, aperture stop and positive cemented rear doublet. Light travels left to right.</desc>
+  <g fill="none" stroke="black" stroke-width="2.5">
+    <path d="M50 115 H1440" stroke-width="1.2" stroke-dasharray="12 7"/>
+    <path d="M1425 109 L1440 115 L1425 121"/>
+    <path d="M300 45 Q240 115 300 185 L325 185 Q350 115 325 45 Z"/>
+    <path d="M595 45 Q635 115 595 185 L645 185 Q615 115 645 45 Z"/>
+    <path d="M830 45 V88 M830 142 V185" stroke-width="7"/>
+    <path d="M1020 45 Q980 115 1020 185 L1120 185 Q1150 115 1120 45 Z"/>
+    <path d="M1060 45 Q990 115 1060 185"/>
+    <path d="M1190 45 V185 M1182 45 H1198 M1182 185 H1198" stroke-width="1.3"/>
+  </g>
+  <g fill="black" font-family="Times New Roman MT Std,serif" font-size="23" text-anchor="middle">
+    <text x="310" y="27">positive singlet</text>
+    <text x="620" y="27">negative singlet</text>
+    <text x="830" y="27">aperture stop</text>
+    <text x="1080" y="27">positive cemented doublet</text>
+    <text x="310" y="213">I: +</text>
+    <text x="620" y="213">II: −</text>
+    <text x="1080" y="213">III: +</text>
+    <text x="1210" y="81" text-anchor="start">clear diameter</text>
+    <text x="1310" y="143" text-anchor="start">optical axis z</text>
+    <text x="90" y="86" text-anchor="start">light →</text>
+  </g>
+</svg>
