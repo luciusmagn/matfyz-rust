@@ -1,0 +1,7 @@
+https://matfyz.lho.sh {
+	root * /srv/matfyz/current
+	encode zstd gzip
+	header X-Content-Type-Options nosniff
+	header Cache-Control "no-cache"
+	file_server
+}

@@ -48,6 +48,10 @@ Run from the repository root:
 
 Use =./build.sh= for the introduction. Edit =lesson.md= in =materials/2026/basic/introduction/= or =materials/2026/basic/lecture-01-ownership-borrowing/=. See each directory's =README.md= for HTML/PDF builds, presentation controls, and verification.
 
+** Publishing the course site
+
+The live site at https://matfyz.lho.sh uses a static public-only bundle served by Caddy. See [[file:deployment/README.md][deployment instructions]] for publication and rollback.
+
 * Configuration
 
 Edit ~src/config.lisp~ to customize:
