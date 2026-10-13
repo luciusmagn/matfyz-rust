@@ -1,0 +1,24 @@
+#+title: Autolith project adaptations
+
+* Purpose
+
+This voluntary file records reusable ways Autolith adapts itself to this
+project. It supplements AGENTS.md and never overrides repository policy, user
+instructions, or capability boundaries. It contains documentation, not
+executable Lisp.
+
+* Project profile
+
+Record project-specific tools, workflows, and recurring friction only when they
+matter to future work.
+
+* Active adaptations
+
+For each adaptation, record its problem, behavior, scope and location,
+verification, and removal condition. State whether it is tracked project work,
+a user-local init.lisp change, or a private image commit.
+
+* Candidates
+
+Record only concrete improvements with evidence of recurring value. Remove
+discarded or obsolete candidates.

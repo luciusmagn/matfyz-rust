@@ -248,7 +248,7 @@ inferred</li>
 </ul></li>
 <li><code>isize</code>, <code>usize</code>: ptr-sized integers</li>
 <li><code>f32</code>, <code>f64</code>: floats</li>
-<li><code>bool</code>:</li>
+<li><code>bool</code></li>
 <li><code>char</code>: Unicode scalar value, 4b (not 1 byte!)</li>
 <li><code>()</code>: unit, a value with no stored data
 <ul>
@@ -305,8 +305,8 @@ class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb7-1">
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <ul>
 <li><code>clone</code> makes a copy of the allocation and contents</li>
+<li>Rust generally does not do implicit copies of heap allocations</li>
 </ul>
-<p>Rust generally does not do implicit copies of heap allocations</p>
 </section>
 <section id="borrowed-results" class="level2">
 <h2>Borrowed results</h2>
@@ -344,8 +344,8 @@ class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb9-1">
 move</li>
 <li>A reference into the old buffer would be a dangling ref</li>
 <li>Uh oh</li>
+<li>=&gt; shared and exclusive access cant overlap</li>
 </ul>
-<p>=&gt; shared and exclusive access cant overlap</p>
 </section>
 <section id="reserved-capacity" class="level2">
 <h2>Reserved capacity</h2>
@@ -438,7 +438,6 @@ class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb14-1"
 <li>Install Rust and configure your editor</li>
 <li>Build and run a Cargo project</li>
 <li>Bring a laptop</li>
-<li>Course Discord and materials are linked at the start</li>
 </ul>
 </section>
 </section>

@@ -25,6 +25,37 @@ function resize() {
   const scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
   document.documentElement.style.setProperty("--slide-scale", scale);
 }
+function contentFits(slide) {
+  const style = getComputedStyle(slide);
+  const rect = slide.getBoundingClientRect();
+  const right = rect.right - parseFloat(style.paddingRight);
+  const bottom = rect.bottom - parseFloat(style.paddingBottom);
+  for (const child of slide.children) {
+    if (child.classList.contains("slide-number")) continue;
+    const box = child.getBoundingClientRect();
+    if (box.right > right + .5 || box.bottom > bottom + .5) return false;
+  }
+  return [...slide.querySelectorAll("pre")]
+    .every(pre => pre.scrollWidth <= pre.clientWidth + 1);
+}
+function fitSlide(slide) {
+  slide.classList.add("fitting");
+  slide.style.setProperty("--content-scale", 1);
+  if (!contentFits(slide)) {
+    let low = .55;
+    let high = 1;
+    for (let pass = 0; pass < 12; pass++) {
+      const scale = (low + high) / 2;
+      slide.style.setProperty("--content-scale", scale);
+      if (contentFits(slide)) low = scale;
+      else high = scale;
+    }
+    slide.style.setProperty("--content-scale", low);
+  }
+  slide.classList.remove("fitting");
+}
+function fitSlides() { slides.forEach(fitSlide); }
+
 function show(index, complete = false) {
   current = Math.max(0, Math.min(slides.length - 1, index));
   slides.forEach((slide, number) => slide.classList.toggle("active", number === current));
@@ -72,5 +103,7 @@ for (const pre of document.querySelectorAll("pre.runnable")) {
   run.setAttribute("aria-label", "Run example in Rust Playground (new tab)");
   pre.parentElement.append(run);
 }
+fitSlides();
+document.fonts.ready.then(fitSlides);
 resize();
 show(current);
