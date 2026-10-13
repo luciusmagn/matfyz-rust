@@ -21,8 +21,8 @@ NPRG082 · winter 2026/27
 
 ![A pointer containing the illustrative address 0x1000 refers to an integer value 7 stored at that address. Following the pointer accesses that integer.](pointer.svg){.memory-diagram}
 
-- Memory holds bytes at numbered addresses
-- A pointer refers to a location. Dereference it to access the value
+- Sometimes we need to share a piece of memory
+- Pointers let us observe remote state, and possibly mutate it (woo, dangerous!)
 
 ## Stack and heap {data-preview="true"}
 
