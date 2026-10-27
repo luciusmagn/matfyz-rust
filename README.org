@@ -44,9 +44,10 @@ Run from the repository root:
 #+begin_src bash
 ./build.sh introduction
 ./build.sh ownership
+./build.sh enums
 #+end_src
 
-Use =./build.sh= for the introduction. Edit =lesson.md= in =materials/2026/basic/introduction/= or =materials/2026/basic/lecture-01-ownership-borrowing/=. See each directory's =README.md= for HTML/PDF builds, presentation controls, and verification.
+Use =./build.sh= for the introduction. Edit =lesson.md= in =materials/2026/basic/introduction/=, =materials/2026/basic/lecture-01-ownership-borrowing/=, or =materials/2026/basic/lecture-02-enums-patterns-errors/=. See each directory's =README.md= for HTML/PDF builds, presentation controls, and verification.
 
 ** Publishing the course site
 

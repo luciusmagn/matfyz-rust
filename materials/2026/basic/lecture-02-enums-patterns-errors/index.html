@@ -1,0 +1,882 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Programming in Rust · Enums, patterns and errors</title>
+  <link rel="stylesheet" href="../introduction/deck.css">
+</head>
+<body>
+  <main id="deck">
+<section id="programming-in-rust-nprg082" class="level1">
+<h1>Programming in Rust · NPRG082</h1>
+<section id="enums" class="level2 title-slide" data-preview="true">
+<h2 class="title-slide" data-preview="true"><span
+class="title-language">Enums</span></h2>
+<div class="title-author">
+<p>Lukáš Hozda</p>
+</div>
+<div class="title-term">
+<p>Patterns and error handling</p>
+<p>NPRG082 · winter 2026/27</p>
+</div>
+</section>
+<section id="data-modelling" class="level2">
+<h2>Data modelling</h2>
+<ul>
+<li>Structs: several fields present together</li>
+<li>Enums: one of several alternatives, each with its own fields</li>
+<li>Patterns: test the alternative and bind its contents</li>
+<li>Ownership rules apply to the contents too</li>
+<li>Errors and missing values are ordinary cases of this model</li>
+</ul>
+</section>
+<section id="independent-fields" class="level2" data-preview="true">
+<h2 data-preview="true">Independent fields</h2>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Download <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    finished<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    bytes_received<span class="op">:</span> <span class="dt">u64</span><span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    file<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    error<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>A file and an error can both be present</li>
+<li>A finished download can have neither</li>
+<li>Meaningful combinations depend on conventions outside the type</li>
+</ul>
+</section>
+<section id="state-specific-data" class="level2">
+<h2>State-specific data</h2>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> Download <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    Receiving <span class="op">{</span> bytes_received<span class="op">:</span> <span class="dt">u64</span> <span class="op">},</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    Finished <span class="op">{</span> file<span class="op">:</span> <span class="dt">String</span> <span class="op">},</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    Failed <span class="op">{</span> error<span class="op">:</span> <span class="dt">String</span> <span class="op">},</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Exactly one variant at a time</li>
+<li>A finished download always includes a file name</li>
+<li>A failed download includes an error instead</li>
+</ul>
+</section>
+<section id="variant-construction" class="level2">
+<h2>Variant construction</h2>
+<div class="sourceCode" id="cb3" data-output="receiving 128"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> Download <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    Receiving <span class="op">{</span> bytes_received<span class="op">:</span> <span class="dt">u64</span> <span class="op">},</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    Finished(<span class="dt">String</span>)<span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    Cancelled<span class="op">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> state <span class="op">=</span> <span class="pp">Download::</span>Receiving <span class="op">{</span> bytes_received<span class="op">:</span> <span class="dv">128</span> <span class="op">};</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">let</span> <span class="pp">Download::</span>Receiving <span class="op">{</span> bytes_received <span class="op">}</span> <span class="op">=</span> state <span class="op">{</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="pp">println!</span>(<span class="st">&quot;receiving {bytes_received}&quot;</span>)<span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+</section>
+<section id="product-and-sum-types" class="level2">
+<h2>Product and sum types</h2>
+<ul>
+<li>A struct is a <strong>product</strong>: a choice for each field</li>
+<li>An enum is a <strong>sum</strong>: a choice of variant and its
+payload</li>
+<li><code>(bool, u8)</code>: 2 × 256 = 512 possible values</li>
+<li><code>enum Level { Off, On(u8) }</code>: 1 + 256 = 257</li>
+<li>These counts describe values, not memory size</li>
+</ul>
+</section>
+<section id="enum-methods" class="level2">
+<h2>Enum methods</h2>
+<div class="sourceCode" id="cb4" data-output="9"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> Shape <span class="op">{</span> Square(<span class="dt">u32</span>)<span class="op">,</span> Rectangle(<span class="dt">u32</span><span class="op">,</span> <span class="dt">u32</span>) <span class="op">}</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Shape <span class="op">{</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> area(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">u32</span> <span class="op">{</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">match</span> <span class="kw">self</span> <span class="op">{</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>            <span class="pp">Shape::</span>Square(side) <span class="op">=&gt;</span> side <span class="op">*</span> side<span class="op">,</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>            <span class="pp">Shape::</span>Rectangle(w<span class="op">,</span> h) <span class="op">=&gt;</span> w <span class="op">*</span> h<span class="op">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span> <span class="pp">println!</span>(<span class="st">&quot;{}&quot;</span><span class="op">,</span> <span class="pp">Shape::</span>Square(<span class="dv">3</span>)<span class="op">.</span>area())<span class="op">;</span> <span class="op">}</span></span></code></pre></div>
+</section>
+<section id="recursive-values" class="level2">
+<h2>Recursive values</h2>
+<div class="sourceCode" id="cb5" data-error="E0072"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> List <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    End<span class="op">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    Node(<span class="dt">i32</span><span class="op">,</span> List)<span class="op">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{}</span></span></code></pre></div>
+<ul>
+<li>E0072: the type would need infinitely large inline storage</li>
+<li>The recursive field needs indirection</li>
+</ul>
+</section>
+<section id="recursive-box" class="level2" data-preview="true">
+<h2 data-preview="true">Indirection with Box</h2>
+<div class="sourceCode" id="cb6" data-output="7"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> List <span class="op">{</span> End<span class="op">,</span> Node(<span class="dt">i32</span><span class="op">,</span> <span class="dt">Box</span><span class="op">&lt;</span>List<span class="op">&gt;</span>) <span class="op">}</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> sum(list<span class="op">:</span> <span class="op">&amp;</span>List) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> list <span class="op">{</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        <span class="pp">List::</span>End <span class="op">=&gt;</span> <span class="dv">0</span><span class="op">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>        <span class="pp">List::</span>Node(value<span class="op">,</span> tail) <span class="op">=&gt;</span> value <span class="op">+</span> sum(tail)<span class="op">,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> list <span class="op">=</span> <span class="pp">List::</span>Node(<span class="dv">7</span><span class="op">,</span> <span class="dt">Box</span><span class="pp">::</span>new(<span class="pp">List::</span>End))<span class="op">;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{}&quot;</span><span class="op">,</span> sum(<span class="op">&amp;</span>list))<span class="op">;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+</section>
+<section id="enum-representation" class="level2">
+<h2>Enum representation</h2>
+<ul>
+<li>A variant’s identity is its <strong>discriminant</strong></li>
+<li>Storage must accommodate the payload of any variant</li>
+<li>Payload storage can overlap because only one variant is active</li>
+<li>Exact layout is unspecified with Rust’s default representation</li>
+<li>Optimizations can encode the discriminant in unused payload
+values</li>
+</ul>
+</section>
+<section id="optional-references" class="level2">
+<h2>Optional references</h2>
+<div class="sourceCode" id="cb7" data-output="true"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::mem::</span>size_of<span class="op">;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="pp">assert_eq!</span>(<span class="pp">size_of::</span><span class="op">&lt;</span><span class="dt">Option</span><span class="op">&lt;&amp;</span><span class="dt">u8</span><span class="op">&gt;&gt;</span>()<span class="op">,</span> <span class="pp">size_of::</span><span class="op">&lt;&amp;</span><span class="dt">u8</span><span class="op">&gt;</span>())<span class="op">;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;true&quot;</span>)<span class="op">;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>A shared reference is non-null; null can encode
+<code>None</code></li>
+<li>Equal size and alignment are guaranteed for this case</li>
+<li>The same guarantee does not apply to every
+<code>Option&lt;T&gt;</code></li>
+</ul>
+</section>
+<section id="match-expressions" class="level2">
+<h2>Match expressions</h2>
+<div class="sourceCode" id="cb8" data-output="present"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> item <span class="op">=</span> <span class="cn">Some</span>(<span class="dv">7</span>)<span class="op">;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> description <span class="op">=</span> <span class="cf">match</span> item <span class="op">{</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Some</span>(_) <span class="op">=&gt;</span> <span class="st">&quot;present&quot;</span><span class="op">,</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        <span class="cn">None</span> <span class="op">=&gt;</span> <span class="st">&quot;absent&quot;</span><span class="op">,</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{description}&quot;</span>)<span class="op">;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>First matching arm, one resulting value</li>
+<li>Arm results must have compatible types</li>
+</ul>
+</section>
+<section id="exhaustiveness" class="level2">
+<h2>Exhaustiveness</h2>
+<div class="sourceCode" id="cb9" data-error="E0004"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> Status <span class="op">{</span> Queued<span class="op">,</span> Running<span class="op">,</span> Finished <span class="op">}</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> state <span class="op">=</span> <span class="pp">Status::</span>Queued<span class="op">;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> state <span class="op">{</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>        <span class="pp">Status::</span>Queued <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;queued&quot;</span>)<span class="op">,</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        <span class="pp">Status::</span>Running <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;running&quot;</span>)<span class="op">,</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>E0004: <code>Finished</code> has no matching arm</li>
+</ul>
+</section>
+<section id="wildcard-coverage" class="level2">
+<h2>Wildcard coverage</h2>
+<ul>
+<li><code>_</code> matches any value without binding it</li>
+<li>A catch-all arm includes variants added later</li>
+<li>Explicit arms expose missing cases when an enum changes</li>
+<li>Use a catch-all when those other cases genuinely have the same
+meaning</li>
+</ul>
+</section>
+<section id="binding-patterns" class="level2">
+<h2>Binding patterns</h2>
+<div class="sourceCode" id="cb10" data-output="8 5"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> expected <span class="op">=</span> <span class="dv">5</span><span class="op">;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> <span class="dv">8</span> <span class="op">{</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>        expected <span class="op">=&gt;</span> <span class="pp">print!</span>(<span class="st">&quot;{expected} &quot;</span>)<span class="op">,</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{expected}&quot;</span>)<span class="op">;</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>A binding pattern introduces a name, even if it shadows one</li>
+<li>Comparing with an existing local requires an expression in a
+guard</li>
+</ul>
+</section>
+<section id="ranges-and-alternatives" class="level2">
+<h2>Ranges and alternatives</h2>
+<div class="sourceCode" id="cb11" data-output="denied"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> code <span class="op">=</span> <span class="dv">403</span><span class="op">;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> message <span class="op">=</span> <span class="cf">match</span> code <span class="op">{</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>        <span class="dv">200</span><span class="op">..=</span><span class="dv">299</span> <span class="op">=&gt;</span> <span class="st">&quot;success&quot;</span><span class="op">,</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>        <span class="dv">401</span> <span class="op">|</span> <span class="dv">403</span> <span class="op">=&gt;</span> <span class="st">&quot;denied&quot;</span><span class="op">,</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>        _ <span class="op">=&gt;</span> <span class="st">&quot;other&quot;</span><span class="op">,</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{message}&quot;</span>)<span class="op">;</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+</section>
+<section id="match-guards" class="level2">
+<h2>Match guards</h2>
+<div class="sourceCode" id="cb12" data-output="equal"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> expected <span class="op">=</span> <span class="dv">5</span><span class="op">;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> <span class="cn">Some</span>(<span class="dv">5</span>) <span class="op">{</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Some</span>(value) <span class="cf">if</span> value <span class="op">==</span> expected <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;equal&quot;</span>)<span class="op">,</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Some</span>(_) <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;different&quot;</span>)<span class="op">,</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>        <span class="cn">None</span> <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;absent&quot;</span>)<span class="op">,</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>A guard runs after its pattern matches</li>
+<li>A false guard allows matching to continue</li>
+</ul>
+</section>
+<section id="guards-and-exhaustiveness" class="level2">
+<h2>Guards and exhaustiveness</h2>
+<div class="sourceCode" id="cb13" data-error="E0004"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> value <span class="op">=</span> <span class="dv">7</span><span class="op">;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> value <span class="op">{</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>        n <span class="cf">if</span> n <span class="op">&gt;=</span> <span class="dv">0</span> <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;nonnegative&quot;</span>)<span class="op">,</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>        n <span class="cf">if</span> n <span class="op">&lt;</span> <span class="dv">0</span> <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;negative&quot;</span>)<span class="op">,</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Guard conditions do not establish exhaustive coverage</li>
+<li>Add an unguarded case covering the remaining possibilities</li>
+</ul>
+</section>
+<section id="bindings-with" class="level2">
+<h2>Bindings with @</h2>
+<div class="sourceCode" id="cb14" data-output="204"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> <span class="dv">204</span> <span class="op">{</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>        code <span class="op">@</span> <span class="dv">200</span><span class="op">..=</span><span class="dv">299</span> <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;{code}&quot;</span>)<span class="op">,</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>        _ <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;other&quot;</span>)<span class="op">,</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Bind the matched value and constrain it with another pattern</li>
+</ul>
+</section>
+<section id="struct-and-tuple-patterns" class="level2">
+<h2>Struct and tuple patterns</h2>
+<div class="sourceCode" id="cb15" data-output="3 4"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Point <span class="op">{</span> x<span class="op">:</span> <span class="dt">i32</span><span class="op">,</span> y<span class="op">:</span> <span class="dt">i32</span> <span class="op">}</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> pair <span class="op">=</span> (Point <span class="op">{</span> x<span class="op">:</span> <span class="dv">3</span><span class="op">,</span> y<span class="op">:</span> <span class="dv">4</span> <span class="op">},</span> <span class="dv">9</span>)<span class="op">;</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> (Point <span class="op">{</span> x<span class="op">:</span> horizontal<span class="op">,</span> y <span class="op">},</span> _) <span class="op">=</span> pair<span class="op">;</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{horizontal} {y}&quot;</span>)<span class="op">;</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Field renaming, shorthand, and nested patterns</li>
+</ul>
+</section>
+<section id="slice-patterns" class="level2" data-preview="true">
+<h2 data-preview="true">Slice patterns</h2>
+<div class="sourceCode" id="cb16" data-output="Some((2, 5))"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> ends(values<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">i32</span>]) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;</span>(<span class="op">&amp;</span><span class="dt">i32</span><span class="op">,</span> <span class="op">&amp;</span><span class="dt">i32</span>)<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> values <span class="op">{</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>        [] <span class="op">|</span> [_] <span class="op">=&gt;</span> <span class="cn">None</span><span class="op">,</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>        [first<span class="op">,</span> <span class="op">..,</span> last] <span class="op">=&gt;</span> <span class="cn">Some</span>((first<span class="op">,</span> last))<span class="op">,</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{:?}&quot;</span><span class="op">,</span> ends(<span class="op">&amp;</span>[<span class="dv">2</span><span class="op">,</span> <span class="dv">4</span><span class="op">,</span> <span class="dv">5</span>]))<span class="op">;</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code>..</code> ignores the intervening elements, including zero
+elements</li>
+</ul>
+</section>
+<section id="bound-subslices" class="level2">
+<h2>Bound subslices</h2>
+<div class="sourceCode" id="cb17" data-output="[2, 3]"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> values <span class="op">=</span> [<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">4</span>]<span class="op">;</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">let</span> [_<span class="op">,</span> middle <span class="op">@</span> <span class="op">..,</span> _] <span class="op">=</span> values<span class="op">.</span>as_slice() <span class="op">{</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>        <span class="pp">println!</span>(<span class="st">&quot;{middle:?}&quot;</span>)<span class="op">;</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Here <code>middle</code> has type <code>&amp;[i32]</code></li>
+<li>The pattern requires at least two elements</li>
+</ul>
+</section>
+<section id="refutable-patterns" class="level2">
+<h2>Refutable patterns</h2>
+<div class="sourceCode" id="cb18" data-error="E0005"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> item <span class="op">=</span> <span class="cn">Some</span>(<span class="dv">7</span>)<span class="op">;</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="cn">Some</span>(value) <span class="op">=</span> item<span class="op">;</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{value}&quot;</span>)<span class="op">;</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Plain <code>let</code> requires an <strong>irrefutable</strong>
+pattern</li>
+<li><code>Some(value)</code> can fail to match: the type also contains
+<code>None</code></li>
+</ul>
+</section>
+<section id="conditional-binding" class="level2">
+<h2>Conditional binding</h2>
+<div class="sourceCode" id="cb19" data-output="7"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> item <span class="op">=</span> <span class="cn">Some</span>(<span class="dv">7</span>)<span class="op">;</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">let</span> <span class="cn">Some</span>(value) <span class="op">=</span> item <span class="op">{</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>        <span class="pp">println!</span>(<span class="st">&quot;{value}&quot;</span>)<span class="op">;</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>        <span class="pp">println!</span>(<span class="st">&quot;absent&quot;</span>)<span class="op">;</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code>if let</code>: one pattern of interest, optional fallback</li>
+</ul>
+</section>
+<section id="let-else" class="level2" data-preview="true">
+<h2 data-preview="true">Early exits with let else</h2>
+<div class="sourceCode" id="cb20" data-output="oak"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> print_value(line<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">{</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="cn">Some</span>((_<span class="op">,</span> value)) <span class="op">=</span> line<span class="op">.</span>split_once(<span class="ch">&#39;=&#39;</span>) <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{value}&quot;</span>)<span class="op">;</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span> print_value(<span class="st">&quot;name=oak&quot;</span>)<span class="op">;</span> <span class="op">}</span></span></code></pre></div>
+<ul>
+<li>A successful binding is available in the surrounding scope</li>
+<li>The <code>else</code> branch must diverge: <code>return</code>,
+<code>break</code>, <code>panic!</code>, …</li>
+</ul>
+</section>
+<section id="repeated-matching" class="level2">
+<h2>Repeated matching</h2>
+<div class="sourceCode" id="cb21" data-output="3 2 1 "><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> stack <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>]<span class="op">;</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="kw">let</span> <span class="cn">Some</span>(value) <span class="op">=</span> stack<span class="op">.</span>pop() <span class="op">{</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>        <span class="pp">print!</span>(<span class="st">&quot;{value} &quot;</span>)<span class="op">;</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code>pop</code> removes and returns the last element</li>
+<li>Loop until the pattern fails, here on <code>None</code></li>
+</ul>
+</section>
+<section id="boolean-pattern-tests" class="level2">
+<h2>Boolean pattern tests</h2>
+<div class="sourceCode" id="cb22" data-output="true"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> value <span class="op">=</span> <span class="cn">Some</span>(<span class="dv">8</span>)<span class="op">;</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> positive <span class="op">=</span> <span class="pp">matches!</span>(value<span class="op">,</span> <span class="cn">Some</span>(n) <span class="cf">if</span> n <span class="op">&gt;</span> <span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{positive}&quot;</span>)<span class="op">;</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code>matches!</code> produces a <code>bool</code></li>
+<li>Pattern bindings are local to the macro’s test</li>
+</ul>
+</section>
+<section id="moving-a-payload" class="level2">
+<h2>Moving a payload</h2>
+<div class="sourceCode" id="cb23" data-error="E0382"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> name <span class="op">=</span> <span class="cn">Some</span>(<span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;oak&quot;</span>))<span class="op">;</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">let</span> <span class="cn">Some</span>(text) <span class="op">=</span> name <span class="op">{</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>        <span class="pp">println!</span>(<span class="st">&quot;{text}&quot;</span>)<span class="op">;</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{name:?}&quot;</span>)<span class="op">;</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code>text</code> takes ownership of the inner
+<code>String</code></li>
+<li>The original option may have been partially moved</li>
+</ul>
+</section>
+<section id="borrowed-patterns" class="level2" data-preview="true">
+<h2 data-preview="true">Borrowing a payload</h2>
+<div class="sourceCode" id="cb24" data-output="oak true"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> name <span class="op">=</span> <span class="cn">Some</span>(<span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;oak&quot;</span>))<span class="op">;</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">let</span> <span class="cn">Some</span>(text) <span class="op">=</span> <span class="op">&amp;</span>name <span class="op">{</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>        <span class="pp">print!</span>(<span class="st">&quot;{text} &quot;</span>)<span class="op">;</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{}&quot;</span><span class="op">,</span> name<span class="op">.</span>is_some())<span class="op">;</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Matching through <code>&amp;name</code> binds
+<code>text: &amp;String</code></li>
+<li>Reference binding is inferred from the borrowed value</li>
+</ul>
+</section>
+<section id="mutable-pattern-bindings" class="level2">
+<h2>Mutable pattern bindings</h2>
+<div class="sourceCode" id="cb25" data-output="oaks"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> name <span class="op">=</span> <span class="cn">Some</span>(<span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;oak&quot;</span>))<span class="op">;</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">let</span> <span class="cn">Some</span>(text) <span class="op">=</span> <span class="op">&amp;</span><span class="kw">mut</span> name <span class="op">{</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>        text<span class="op">.</span>push(<span class="ch">&#39;s&#39;</span>)<span class="op">;</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{}&quot;</span><span class="op">,</span> name<span class="op">.</span>unwrap())<span class="op">;</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Here <code>text: &amp;mut String</code></li>
+<li>Mutation of the payload without moving it out</li>
+</ul>
+</section>
+<section id="explicit-reference-bindings" class="level2">
+<h2>Explicit reference bindings</h2>
+<div class="sourceCode" id="cb26" data-output="oak true"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> name <span class="op">=</span> <span class="cn">Some</span>(<span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;oak&quot;</span>))<span class="op">;</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">let</span> <span class="cn">Some</span>(<span class="kw">ref</span> text) <span class="op">=</span> name <span class="op">{</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>        <span class="pp">print!</span>(<span class="st">&quot;{text} &quot;</span>)<span class="op">;</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{}&quot;</span><span class="op">,</span> name<span class="op">.</span>is_some())<span class="op">;</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code>ref text</code> borrows for the binding instead of moving</li>
+<li><code>ref</code> creates a reference; an <code>&amp;</code> pattern
+destructures one</li>
+</ul>
+</section>
+<section id="reference-patterns" class="level2">
+<h2>Reference patterns</h2>
+<div class="sourceCode" id="cb27" data-output="3 4"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> point <span class="op">=</span> <span class="op">&amp;</span>(<span class="dv">3</span><span class="op">,</span> <span class="dv">4</span>)<span class="op">;</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="op">&amp;</span>(x<span class="op">,</span> y) <span class="op">=</span> point<span class="op">;</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{x} {y}&quot;</span>)<span class="op">;</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>The <code>&amp;</code> pattern removes a reference layer during
+matching</li>
+<li>Here the bound coordinates are copied integers, not references</li>
+</ul>
+</section>
+<section id="wildcards-and-named-bindings" class="level2">
+<h2>Wildcards and named bindings</h2>
+<div class="sourceCode" id="cb28" data-error="E0382"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> text <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;oak&quot;</span>)<span class="op">;</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> _ <span class="op">=</span> text<span class="op">;</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{text}&quot;</span>)<span class="op">;</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> _saved <span class="op">=</span> text<span class="op">;</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{text}&quot;</span>)<span class="op">;</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code>_</code> does not bind or move this string</li>
+<li><code>_saved</code> is an ordinary binding and takes ownership</li>
+</ul>
+</section>
+<section id="borrowed-views-of-option" class="level2">
+<h2>Borrowed views of Option</h2>
+<div class="sourceCode" id="cb29" data-output="3 true"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> name <span class="op">=</span> <span class="cn">Some</span>(<span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;oak&quot;</span>))<span class="op">;</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> view<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;&amp;</span><span class="dt">String</span><span class="op">&gt;</span> <span class="op">=</span> name<span class="op">.</span>as_ref()<span class="op">;</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">let</span> <span class="cn">Some</span>(text) <span class="op">=</span> view <span class="op">{</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>        <span class="pp">print!</span>(<span class="st">&quot;{} &quot;</span><span class="op">,</span> text<span class="op">.</span>len())<span class="op">;</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{}&quot;</span><span class="op">,</span> name<span class="op">.</span>is_some())<span class="op">;</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code>as_ref</code>: <code>&amp;Option&lt;T&gt;</code> to
+<code>Option&lt;&amp;T&gt;</code></li>
+</ul>
+</section>
+<section id="option-take" class="level2" data-preview="true">
+<h2 data-preview="true">Taking an optional value</h2>
+<div class="sourceCode" id="cb30" data-output="oak true"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Slot <span class="op">{</span> value<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span> <span class="op">}</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Slot <span class="op">{</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> take(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span> <span class="op">{</span> <span class="kw">self</span><span class="op">.</span>value<span class="op">.</span>take() <span class="op">}</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> slot <span class="op">=</span> Slot <span class="op">{</span> value<span class="op">:</span> <span class="cn">Some</span>(<span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;oak&quot;</span>)) <span class="op">};</span></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>    <span class="pp">print!</span>(<span class="st">&quot;{} &quot;</span><span class="op">,</span> slot<span class="op">.</span>take()<span class="op">.</span>unwrap())<span class="op">;</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{}&quot;</span><span class="op">,</span> slot<span class="op">.</span>value<span class="op">.</span>is_none())<span class="op">;</span></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Move the old value out and leave <code>None</code> in its place</li>
+</ul>
+</section>
+<section id="replacing-an-optional-value" class="level2">
+<h2>Replacing an optional value</h2>
+<div class="sourceCode" id="cb31" data-output="oak elm"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> name <span class="op">=</span> <span class="cn">Some</span>(<span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;oak&quot;</span>))<span class="op">;</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> previous <span class="op">=</span> name<span class="op">.</span>replace(<span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;elm&quot;</span>))<span class="op">;</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{} {}&quot;</span><span class="op">,</span> previous<span class="op">.</span>unwrap()<span class="op">,</span> name<span class="op">.</span>unwrap())<span class="op">;</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Return the old option and store <code>Some(new_value)</code></li>
+<li>Both <code>take</code> and <code>replace</code> work through an
+exclusive borrow</li>
+</ul>
+</section>
+<section id="mapping-a-value" class="level2">
+<h2>Mapping a value</h2>
+<div class="sourceCode" id="cb32" data-output="Some(3) None"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> name <span class="op">=</span> <span class="cn">Some</span>(<span class="dt">String</span><span class="pp">::</span>from(<span class="st">&quot;oak&quot;</span>))<span class="op">;</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> length <span class="op">=</span> name<span class="op">.</span>map(<span class="op">|</span>text<span class="op">|</span> text<span class="op">.</span>len())<span class="op">;</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> missing<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="cn">None</span><span class="op">;</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{length:?} {:?}&quot;</span><span class="op">,</span> missing<span class="op">.</span>map(<span class="op">|</span>text<span class="op">|</span> text<span class="op">.</span>len()))<span class="op">;</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code>|text| text.len()</code> is a closure: parameter and
+expression</li>
+<li><code>map</code> consumes the option; its closure runs only for
+<code>Some</code></li>
+</ul>
+</section>
+<section id="nested-and-chained-operations" class="level2">
+<h2>Nested and chained operations</h2>
+<div class="sourceCode" id="cb33" data-output="Some(None) None"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> value <span class="op">=</span> <span class="cn">Some</span>(<span class="dv">200_u8</span>)<span class="op">;</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> nested <span class="op">=</span> value<span class="op">.</span>map(<span class="op">|</span>n<span class="op">|</span> n<span class="op">.</span>checked_mul(<span class="dv">2</span>))<span class="op">;</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> flat <span class="op">=</span> value<span class="op">.</span>and_then(<span class="op">|</span>n<span class="op">|</span> n<span class="op">.</span>checked_mul(<span class="dv">2</span>))<span class="op">;</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{nested:?} {flat:?}&quot;</span>)<span class="op">;</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code>map</code>: wrap the result, here
+<code>Option&lt;Option&lt;u8&gt;&gt;</code></li>
+<li><code>and_then</code>: the next operation already returns an
+<code>Option</code></li>
+</ul>
+</section>
+<section id="eager-and-lazy-defaults" class="level2">
+<h2>Eager and lazy defaults</h2>
+<div class="sourceCode" id="cb34" data-output="computed 7 7"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> fallback() <span class="op">-&gt;</span> <span class="dt">u32</span> <span class="op">{</span> <span class="pp">print!</span>(<span class="st">&quot;computed &quot;</span>)<span class="op">;</span> <span class="dv">0</span> <span class="op">}</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> present <span class="op">=</span> <span class="cn">Some</span>(<span class="dv">7</span>)<span class="op">;</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> eager <span class="op">=</span> present<span class="op">.</span>unwrap_or(fallback())<span class="op">;</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> lazy <span class="op">=</span> present<span class="op">.</span>unwrap_or_else(<span class="op">||</span> fallback())<span class="op">;</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{eager} {lazy}&quot;</span>)<span class="op">;</span></span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Ordinary arguments are evaluated before the method call</li>
+<li>Pass a closure to compute a fallback only when needed</li>
+</ul>
+</section>
+<section id="absence-and-failure" class="level2">
+<h2>Absence and failure</h2>
+<ul>
+<li><code>Option&lt;T&gt;</code>: a value may be absent in normal
+operation</li>
+<li><code>Result&lt;T, E&gt;</code>: an operation may fail with a
+described cause</li>
+<li><code>Result&lt;Option&lt;T&gt;, E&gt;</code>: success can itself
+contain no value</li>
+<li>Example: missing configuration is allowed; malformed configuration
+is an error</li>
+</ul>
+</section>
+<section id="result-contracts" class="level2">
+<h2>Result contracts</h2>
+<div class="sourceCode" id="cb35"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> find_user(id<span class="op">:</span> <span class="dt">u64</span>) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;</span>User<span class="op">&gt;</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> parse_user(text<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>User<span class="op">,</span> ParseError<span class="op">&gt;</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> load_user(id<span class="op">:</span> <span class="dt">u64</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">Option</span><span class="op">&lt;</span>User<span class="op">&gt;,</span> StorageError<span class="op">&gt;</span></span></code></pre></div>
+<ul>
+<li>The return type distinguishes these outcomes for the caller</li>
+<li>Error values can carry structured information</li>
+<li><code>Err</code> is a returned value, not an exception in
+flight</li>
+</ul>
+</section>
+<section id="question-mark" class="level2" data-preview="true">
+<h2 data-preview="true">Error propagation</h2>
+<div class="sourceCode" id="cb36" data-output="Ok(true)"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::num::</span>ParseIntError<span class="op">;</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> is_even(text<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">bool</span><span class="op">,</span> ParseIntError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> number <span class="op">=</span> text<span class="op">.</span><span class="pp">parse::</span><span class="op">&lt;</span><span class="dt">u32</span><span class="op">&gt;</span>()<span class="op">?;</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(number <span class="op">%</span> <span class="dv">2</span> <span class="op">==</span> <span class="dv">0</span>)</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span> <span class="pp">println!</span>(<span class="st">&quot;{:?}&quot;</span><span class="op">,</span> is_even(<span class="st">&quot;42&quot;</span>))<span class="op">;</span> <span class="op">}</span></span></code></pre></div>
+<ul>
+<li>On <code>Ok</code>, unwrap the success value</li>
+<li>On <code>Err</code>, return early from the enclosing function</li>
+</ul>
+</section>
+<section id="propagation-as-a-match" class="level2">
+<h2>Propagation as a match</h2>
+<div class="sourceCode" id="cb37"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> number <span class="op">=</span> <span class="cf">match</span> text<span class="op">.</span><span class="pp">parse::</span><span class="op">&lt;</span><span class="dt">u32</span><span class="op">&gt;</span>() <span class="op">{</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(value) <span class="op">=&gt;</span> value<span class="op">,</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Err</span>(error) <span class="op">=&gt;</span> <span class="cf">return</span> <span class="cn">Err</span>(error<span class="op">.</span>into())<span class="op">,</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<ul>
+<li>The <code>Result</code> case of <code>?</code>, written
+explicitly</li>
+<li>The enclosing function needs a compatible result type</li>
+<li>Error conversion uses <code>From</code>; trait implementations come
+later</li>
+</ul>
+</section>
+<section id="propagation-boundaries" class="level2">
+<h2>Propagation boundaries</h2>
+<div class="sourceCode" id="cb38" data-error="E0277"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> number <span class="op">=</span> <span class="st">&quot;42&quot;</span><span class="op">.</span><span class="pp">parse::</span><span class="op">&lt;</span><span class="dt">u32</span><span class="op">&gt;</span>()<span class="op">?;</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{number}&quot;</span>)<span class="op">;</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code>main</code> returns <code>()</code> here, so <code>?</code>
+cannot return a <code>Result</code></li>
+<li><code>?</code> returns from this function, not just the nearest
+block</li>
+</ul>
+</section>
+<section id="optional-propagation" class="level2">
+<h2>Optional propagation</h2>
+<div class="sourceCode" id="cb39"
+data-output="Some((&#39;A&#39;, &#39;L&#39;))"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> initials(first<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span><span class="op">,</span> last<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;</span>(<span class="dt">char</span><span class="op">,</span> <span class="dt">char</span>)<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> first <span class="op">=</span> first<span class="op">.</span>chars()<span class="op">.</span>next()<span class="op">?;</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> last <span class="op">=</span> last<span class="op">.</span>chars()<span class="op">.</span>next()<span class="op">?;</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Some</span>((first<span class="op">,</span> last))</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span> <span class="pp">println!</span>(<span class="st">&quot;{:?}&quot;</span><span class="op">,</span> initials(<span class="st">&quot;Ada&quot;</span><span class="op">,</span> <span class="st">&quot;Lovelace&quot;</span>))<span class="op">;</span> <span class="op">}</span></span></code></pre></div>
+<ul>
+<li>With <code>Option</code>, <code>?</code> returns <code>None</code>
+early</li>
+<li>It does not automatically translate absence into an error</li>
+</ul>
+</section>
+<section id="absence-as-an-error" class="level2">
+<h2>Absence as an error</h2>
+<div class="sourceCode" id="cb40" data-output="Err(Missing)"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> ConfigError <span class="op">{</span> Missing <span class="op">}</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> setting<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">u16</span><span class="op">&gt;</span> <span class="op">=</span> <span class="cn">None</span><span class="op">;</span></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> result <span class="op">=</span> setting<span class="op">.</span>ok_or(<span class="pp">ConfigError::</span>Missing)<span class="op">;</span></span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{result:?}&quot;</span>)<span class="op">;</span></span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code>ok_or</code>: <code>Option&lt;T&gt;</code> to
+<code>Result&lt;T, E&gt;</code></li>
+<li><code>ok_or_else</code>: construct the error only for
+<code>None</code></li>
+</ul>
+</section>
+<section id="domain-error-types" class="level2">
+<h2>Domain error types</h2>
+<div class="sourceCode" id="cb41"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::num::</span>ParseIntError<span class="op">;</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> PortError <span class="op">{</span></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>    Parse(ParseIntError)<span class="op">,</span></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>    Zero<span class="op">,</span></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>Preserve the parsing error as a payload</li>
+<li>Distinguish malformed input from a domain rule</li>
+</ul>
+</section>
+<section id="typed-errors" class="level2" data-preview="true">
+<h2 data-preview="true">Error conversion and validation</h2>
+<div class="sourceCode" id="cb42" data-output="Err(Zero)"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::num::</span>ParseIntError<span class="op">;</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> PortError <span class="op">{</span> Parse(ParseIntError)<span class="op">,</span> Zero <span class="op">}</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> parse_port(text<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">u16</span><span class="op">,</span> PortError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> port <span class="op">=</span> text<span class="op">.</span><span class="pp">parse::</span><span class="op">&lt;</span><span class="dt">u16</span><span class="op">&gt;</span>()<span class="op">.</span>map_err(<span class="pp">PortError::</span>Parse)<span class="op">?;</span></span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> port <span class="op">==</span> <span class="dv">0</span> <span class="op">{</span> <span class="cf">return</span> <span class="cn">Err</span>(<span class="pp">PortError::</span>Zero)<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(port)</span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span> <span class="pp">println!</span>(<span class="st">&quot;{:?}&quot;</span><span class="op">,</span> parse_port(<span class="st">&quot;0&quot;</span>))<span class="op">;</span> <span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code>map_err</code> transforms the error, leaving success
+unchanged</li>
+</ul>
+</section>
+<section id="validation-and-types" class="level2">
+<h2>Validation and types</h2>
+<div class="sourceCode" id="cb43" data-output="false true"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::num::</span>NonZeroU16<span class="op">;</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> rejected <span class="op">=</span> <span class="pp">NonZeroU16::</span>new(<span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> accepted <span class="op">=</span> <span class="pp">NonZeroU16::</span>new(<span class="dv">443</span>)<span class="op">;</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{} {}&quot;</span><span class="op">,</span> rejected<span class="op">.</span>is_some()<span class="op">,</span> accepted<span class="op">.</span>is_some())<span class="op">;</span></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>After construction, a <code>NonZeroU16</code> always contains a
+nonzero value</li>
+<li>Return validated types when later code depends on that
+invariant</li>
+</ul>
+</section>
+<section id="error-information" class="level2">
+<h2>Error information</h2>
+<ul>
+<li>Error variants identify cases callers can handle differently</li>
+<li>Payloads retain relevant input, locations, and underlying
+causes</li>
+<li><code>Debug</code> (<code>{:?}</code>): programmer-facing
+representation</li>
+<li><code>Display</code> (<code>{}</code>): human-readable formatting,
+when implemented</li>
+<li><code>std::error::Error</code>: a common interface, including an
+optional source</li>
+</ul>
+</section>
+<section id="handling-a-specific-failure" class="level2">
+<h2>Handling a specific failure</h2>
+<div class="sourceCode" id="cb44" data-output="not an integer"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::num::IntErrorKind::</span>InvalidDigit<span class="op">;</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> <span class="st">&quot;oak&quot;</span><span class="op">.</span><span class="pp">parse::</span><span class="op">&lt;</span><span class="dt">u16</span><span class="op">&gt;</span>() <span class="op">{</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(port) <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;{port}&quot;</span>)<span class="op">,</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Err</span>(error) <span class="op">=&gt;</span> <span class="cf">match</span> error<span class="op">.</span>kind() <span class="op">{</span></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>            InvalidDigit <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;not an integer&quot;</span>)<span class="op">,</span></span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>            _ <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;{error}&quot;</span>)<span class="op">,</span></span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">},</span></span>
+<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb44-10"><a href="#cb44-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+</section>
+<section id="error-handling-boundaries" class="level2">
+<h2>Error-handling boundaries</h2>
+<ul>
+<li>Low-level operation: return the cause to the caller</li>
+<li>Caller: recover, add context, or propagate</li>
+<li>Application boundary: report the error and choose an exit
+status</li>
+<li>Logging at every propagation step produces duplicate reports</li>
+<li>Replace a failure with a default only when that default is
+meaningful</li>
+</ul>
+</section>
+<section id="fallible-main" class="level2">
+<h2>Fallible main</h2>
+<div class="sourceCode" id="cb45" data-output="42"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::num::</span>ParseIntError<span class="op">;</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> ParseIntError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> value <span class="op">=</span> <span class="st">&quot;42&quot;</span><span class="op">.</span><span class="pp">parse::</span><span class="op">&lt;</span><span class="dt">u32</span><span class="op">&gt;</span>()<span class="op">?;</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{value}&quot;</span>)<span class="op">;</span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(())</span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code>Ok(())</code> indicates successful completion</li>
+<li>Returning <code>Err</code> prints its <code>Debug</code>
+representation and exits unsuccessfully</li>
+</ul>
+</section>
+<section id="transpose" class="level2" data-preview="true">
+<h2 data-preview="true">Optional parsing</h2>
+<div class="sourceCode" id="cb46"
+data-output="Ok(Some(42)) Ok(None)"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::num::</span>ParseIntError<span class="op">;</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> setting(</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>    text<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;&amp;</span><span class="dt">str</span><span class="op">&gt;,</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">Option</span><span class="op">&lt;</span><span class="dt">u16</span><span class="op">&gt;,</span> ParseIntError<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>    text<span class="op">.</span>map(<span class="op">|</span>s<span class="op">|</span> s<span class="op">.</span><span class="pp">parse::</span><span class="op">&lt;</span><span class="dt">u16</span><span class="op">&gt;</span>())<span class="op">.</span>transpose()</span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{:?} {:?}&quot;</span><span class="op">,</span> setting(<span class="cn">Some</span>(<span class="st">&quot;42&quot;</span>))<span class="op">,</span> setting(<span class="cn">None</span>))<span class="op">;</span></span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+</section>
+<section id="transposing-optional-results" class="level2">
+<h2>Transposing optional results</h2>
+<div class="sourceCode" id="cb47"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="cf">match</span> optional_result <span class="op">{</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Some</span>(<span class="cn">Ok</span>(value)) <span class="op">=&gt;</span> <span class="cn">Ok</span>(<span class="cn">Some</span>(value))<span class="op">,</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Some</span>(<span class="cn">Err</span>(error)) <span class="op">=&gt;</span> <span class="cn">Err</span>(error)<span class="op">,</span></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>    <span class="cn">None</span> <span class="op">=&gt;</span> <span class="cn">Ok</span>(<span class="cn">None</span>)<span class="op">,</span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code>transpose</code>:
+<code>Option&lt;Result&lt;T, E&gt;&gt;</code> to
+<code>Result&lt;Option&lt;T&gt;, E&gt;</code></li>
+<li>Missing input is successful absence; malformed input is an
+error</li>
+</ul>
+</section>
+<section id="information-loss" class="level2">
+<h2>Information loss</h2>
+<div class="sourceCode" id="cb48" data-output="None None"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> malformed <span class="op">=</span> <span class="st">&quot;oak&quot;</span><span class="op">.</span><span class="pp">parse::</span><span class="op">&lt;</span><span class="dt">u16</span><span class="op">&gt;</span>()<span class="op">.</span>ok()<span class="op">;</span></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> out_of_range <span class="op">=</span> <span class="st">&quot;70000&quot;</span><span class="op">.</span><span class="pp">parse::</span><span class="op">&lt;</span><span class="dt">u16</span><span class="op">&gt;</span>()<span class="op">.</span>ok()<span class="op">;</span></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{malformed:?} {out_of_range:?}&quot;</span>)<span class="op">;</span></span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li><code>ok()</code> discards the error value</li>
+<li>Both different failures become the same absence</li>
+<li>Useful when the distinction is irrelevant to the caller</li>
+</ul>
+</section>
+<section id="panics" class="level2">
+<h2>Panics</h2>
+<ul>
+<li>A panic signals failure to continue under the current
+assumptions</li>
+<li>Examples: an assertion failure or indexing outside a slice</li>
+<li><code>unwrap</code> and <code>expect</code> panic on
+<code>None</code> or <code>Err</code></li>
+<li>Expected input failures belong in <code>Option</code> or
+<code>Result</code></li>
+<li>Panic handling is separate from matching a returned error</li>
+</ul>
+</section>
+<section id="unwrapping-an-invariant" class="level2">
+<h2>Unwrapping an invariant</h2>
+<div class="sourceCode" id="cb49" data-output="oak"><pre
+class="sourceCode rust runnable"><code class="sourceCode rust"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> words <span class="op">=</span> [<span class="st">&quot;oak&quot;</span><span class="op">,</span> <span class="st">&quot;elm&quot;</span>]<span class="op">;</span></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> first <span class="op">=</span> words<span class="op">.</span>first()<span class="op">.</span>expect(<span class="st">&quot;words is nonempty&quot;</span>)<span class="op">;</span></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;{first}&quot;</span>)<span class="op">;</span></span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<ul>
+<li>State the reason success is expected in the message</li>
+<li>Keep the invariant visible near the unwrap</li>
+<li>Use a fallible return type when failure is part of the API</li>
+</ul>
+</section>
+<section id="cleanup-paths" class="level2">
+<h2>Cleanup paths</h2>
+<ul>
+<li>Ordinary return, including <code>?</code>: drop initialized local
+values</li>
+<li>With <strong>unwinding</strong>, a panic also drops locals on the
+unwound stack</li>
+<li>With <strong>abort</strong>, the process terminates without
+unwinding</li>
+<li><code>catch_unwind</code> catches unwinding panics, not returned
+<code>Err</code> values</li>
+<li>Catching a panic does not undo earlier mutations or external
+effects</li>
+</ul>
+</section>
+<section id="data-and-control-flow" class="level2">
+<h2>Data and control flow</h2>
+<ul>
+<li>Represent alternative states with enum variants and their
+payloads</li>
+<li>Use patterns to inspect, borrow, mutate, or move those payloads</li>
+<li>Keep absence, malformed input, and domain errors distinct</li>
+<li>Propagate errors until a caller has a useful recovery or reporting
+policy</li>
+<li>Make assumptions explicit at the point where a panic is
+acceptable</li>
+</ul>
+</section>
+</section>
+  </main>
+  <script src="../introduction/deck.js"></script>
+</body>
+</html>

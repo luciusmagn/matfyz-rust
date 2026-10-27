@@ -103,6 +103,8 @@ try {
     console.log(`${width}x${height}: ${JSON.stringify(summary)}`);
     assert.deepEqual(results.failures, []);
     assert.deepEqual(contentScales, referenceScales, 'Text fitting changed with viewport scale');
+    if (options.has('--no-shrink'))
+      assert.equal(results.minContentScale, 1, 'Split crowded slides instead of shrinking text');
   }
   const examples = await evaluate(`(() => {
     for (const pre of document.querySelectorAll('pre.runnable')) {
